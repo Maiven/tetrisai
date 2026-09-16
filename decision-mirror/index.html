@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#f7f5f0">
+<title>반대편 — Decision Mirror</title>
+<meta name="description" content="결정하기 전, 내가 보지 못한 것을 보는 AI. 숨은 가정, 반대 논리, 미래 시나리오와 실패 경로를 점검하세요.">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="hero" id="home">
+  <nav>
+    <div class="brand"><span class="logo"><i></i><i></i></span><b>반대편</b><small>Decision Mirror</small></div>
+    <div class="nav"><a href="#why">왜 필요한가</a><a href="#method">분석 방식</a><button onclick="focusDecision()">지금 시작하기 →</button></div>
+  </nav>
+  <div class="hero-inner">
+    <p class="kicker">SEE THE OTHER SIDE BEFORE YOU DECIDE</p>
+    <h1>결정하기 전,<br><em>내가 보지 못한 것</em>을 보는 AI</h1>
+    <p class="lead">AI가 정답을 대신 고르지 않습니다. 당신의 생각을 구조화하고, 숨은 가정과 반대 논리, 실패 경로와 다른 미래를 비춰 더 나은 판단을 돕습니다.</p>
+    <div class="input-card">
+      <div class="input-row">
+        <textarea id="decision" maxlength="500" placeholder="지금 고민하고 있는 결정을 한 문장으로 적어보세요. 예) 안정적인 회사를 떠나 성장 가능성이 높은 스타트업으로 이직할까?"></textarea>
+        <button class="primary" onclick="analyze()">반대편 보기 →</button>
+      </div>
+      <div class="examples"><span>예시</span><button onclick="example(this)">연봉이 높은 스타트업으로 이직할까?</button><button onclick="example(this)">AI PM으로 직무를 바꿀까?</button><button onclick="example(this)">지금 창업하는 것이 맞을까?</button><button class="demo" onclick="demo()">▶ 10초 데모</button></div>
+      <p class="privacy">개인정보·회사 비밀정보는 입력하지 마세요. 실시간 AI 분석 시 입력 내용이 외부 AI API로 전송될 수 있으며, 본 서비스는 별도 계정·히스토리를 저장하지 않습니다.</p>
+    </div>
+    <div class="visual" aria-hidden="true"><div class="sun"></div><div class="storm"></div><div class="path warm"></div><div class="path cool"></div><div class="person"></div><div class="world left">보이는 가능성<small>내가 이미 믿고 있는 것</small></div><div class="world right">보이지 않는 비용<small>내 판단이 놓치고 있는 것</small></div></div>
+    <div class="trust"><div><b>결정을 대신하지 않습니다</b><span>추천보다 판단의 사각지대를 봅니다.</span></div><div><b>내 생각을 일부러 반박합니다</b><span>AI를 확신 강화기가 아닌 레드팀으로 씁니다.</span></div><div><b>실패까지 먼저 상상합니다</b><span>Pre‑mortem으로 실패 조건을 역추적합니다.</span></div></div>
+  </div>
+</div>
+<section class="section" id="why"><p class="kicker leftk">THE PROBLEM</p><h2>사람은 정보가 부족해서만 틀리지 않습니다.</h2><p class="desc">중요한 결정일수록 우리는 이미 원하는 결론을 지지하는 정보에 끌리고, 익숙한 선택의 숨은 비용은 작게 봅니다. 반대편은 생성형 AI를 ‘답변기’가 아니라 ‘판단의 레드팀’으로 사용합니다.</p></section>
+<section class="section method" id="method"><div class="lens"><b>01 · FRAME</b><h3>결정 재정의</h3><p>표면의 질문 뒤에 있는 실제 선택과 시간축을 다시 정의합니다.</p></div><div class="lens"><b>02 · ASSUMPTION</b><h3>숨은 가정</h3><p>당연하다고 믿지만 검증하지 않은 전제를 드러냅니다.</p></div><div class="lens"><b>03 · RED TEAM</b><h3>반대 논리</h3><p>내 결론이 틀렸다고 가정하고 가장 강한 반론을 만듭니다.</p></div><div class="lens"><b>04 · PRE‑MORTEM</b><h3>실패 역추적</h3><p>1년 뒤 실패했다고 가정해 지금 놓친 위험을 찾습니다.</p></div><div class="lens"><b>05 · TEST</b><h3>작은 검증</h3><p>큰 결정을 내리기 전 되돌릴 수 있는 실험을 제안합니다.</p></div></section>
+<section id="results"><div class="results-wrap"><header class="result-head"><div><span class="badge" id="engineBadge">✦ DECISION MIRROR</span><h2>당신의 결정, 반대편에서 보기</h2></div><button class="again" onclick="resetApp()">← 다른 결정 분석</button></header><div class="question"><small>분석한 결정</small><h3 id="rq"></h3><div id="signals"></div></div><div class="grid"><article><label>01 · REFRAME</label><h3>당신이 실제로 결정하는 것</h3><div id="reframe"></div></article><article><label>02 · HIDDEN ASSUMPTIONS</label><h3>검증하지 않은 숨은 가정</h3><div id="assumptions"></div></article><article class="red"><label>03 · AI RED TEAM</label><h3>당신의 판단을 가장 강하게 반박하면</h3><div id="counter"></div></article><article><label>04 · PRE‑MORTEM</label><h3>1년 뒤 실패했다면 어디서 시작됐을까?</h3><div id="premortem"></div></article><article class="full"><label>05 · POSSIBLE FUTURES</label><h3>세 가지 미래를 동시에 보기</h3><div class="futures" id="futures"></div></article><article><label>06 · EVIDENCE GAP</label><h3>결정 전에 꼭 확인할 데이터</h3><div id="evidence"></div></article><article><label>07 · REVERSIBLE TEST</label><h3>큰 결정 전에 해볼 작은 실험</h3><div id="experiment"></div></article><article class="full callout"><label>THE ONE QUESTION</label><h3 id="oneq"></h3><p id="onep"></p><p class="notice">반대편은 의사결정을 대신하지 않는 사고 보조 도구입니다. 의료·법률·투자·안전처럼 중요한 영역에서는 최신 자료와 전문가 검토를 함께 사용하세요.</p></article></div></div></section>
+<div class="loading" id="loading"><div><span class="orb"></span><h3>당신의 생각을 반대편에서 보고 있습니다.</h3><p id="loadText">결정의 구조를 분해하는 중…</p><small>FRAME → ASSUMPTION → RED TEAM → PRE‑MORTEM → TEST</small></div></div>
+<footer>반대편 · Decision Mirror — 더 좋은 답보다, 더 넓은 판단.</footer>
+<script src="app.js"></script>
+</body>
+</html>
