@@ -1,0 +1,23 @@
+name: Decision Mirror CI
+
+on:
+  push:
+    branches: [decision-mirror-vercel]
+  pull_request:
+    branches: [gh-pages]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Build Next.js app
+        run: npm run build
