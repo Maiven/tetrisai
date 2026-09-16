@@ -15,7 +15,7 @@ const analysisSchema = z.object({
     description: z.string(),
     upside: z.string(),
     downside: z.string(),
-  })).min(3).max(3),
+  })).length(3),
   premortem: z.array(z.object({
     step: z.string(),
     earlySignal: z.string(),
@@ -27,7 +27,7 @@ const analysisSchema = z.object({
 });
 
 function fallback(question: string) {
-  const q = question.trim();
+  const q = question.trim() || '중요한 결정을 앞두고 있습니다.';
   return {
     reframedDecision: q,
     realQuestion: '지금의 선택 자체보다, 어떤 조건이 충족될 때 이 선택을 실행할지 판단 기준을 만드는 문제입니다.',
@@ -68,9 +68,10 @@ function fallback(question: string) {
 }
 
 export async function POST(req: Request) {
+  let question = '';
   try {
     const body = await req.json();
-    const question = typeof body?.question === 'string' ? body.question.trim() : '';
+    question = typeof body?.question === 'string' ? body.question.trim() : '';
 
     if (question.length < 8 || question.length > 700) {
       return Response.json({ error: '8자 이상 700자 이하로 고민을 적어주세요.' }, { status: 400 });
@@ -79,7 +80,8 @@ export async function POST(req: Request) {
     const result = await generateText({
       model: 'openai/gpt-5.6-sol',
       output: Output.object({ schema: analysisSchema }),
-      temperature: 0.4,
+      reasoning: 'medium',
+      maxOutputTokens: 2600,
       system: `당신은 Decision Mirror(반대편)의 의사결정 Red Team 엔진입니다.
 사용자의 선택을 대신 결정하거나 특정 결론을 강요하지 않습니다.
 목표는 사용자가 놓친 가정, 반대 논리, 실패 경로, 검증해야 할 데이터를 발견하게 하는 것입니다.
@@ -93,17 +95,13 @@ export async function POST(req: Request) {
     });
 
     return Response.json(
-      { mode: 'ai', model: 'OpenAI GPT-5.6 Sol via Vercel AI Gateway', analysis: result.output },
+      { mode: 'ai', model: 'OpenAI GPT-5.6 Sol · Vercel AI Gateway', analysis: result.output },
       { headers: { 'Cache-Control': 'no-store, max-age=0' } },
     );
   } catch (error) {
     console.error('AI analysis failed:', error);
-    let question = '중요한 결정을 앞두고 있습니다.';
-    try {
-      // The body may already have been consumed; fallback remains intentionally generic.
-    } catch {}
     return Response.json(
-      { mode: 'fallback', model: 'Local decision framework', analysis: fallback(question) },
+      { mode: 'fallback', model: 'Local Decision Red-Team Framework', analysis: fallback(question) },
       { status: 200, headers: { 'Cache-Control': 'no-store, max-age=0' } },
     );
   }
