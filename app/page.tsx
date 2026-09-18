@@ -53,6 +53,7 @@ type ApiResult = {
   model: string;
   analysis: Analysis;
   ontologyGraph?: DecisionGraph;
+  ontologyValidation?: { valid: boolean; violations: string[] };
   ontologyVersion?: string;
 };
 
@@ -522,7 +523,7 @@ export default function Home() {
               {evidenceLoopMessage && <p className="evidenceLoopMessage">{evidenceLoopMessage}</p>}
             </article>
 
-            {result.ontologyGraph && <OntologyMap graph={result.ontologyGraph} />}
+            {result.ontologyGraph && <OntologyMap graph={result.ontologyGraph} validation={result.ontologyValidation} />}
 
             <article className="verificationSprint">
               <div className="sprintHead">
@@ -671,7 +672,7 @@ export default function Home() {
   );
 }
 
-function OntologyMap({ graph }: { graph: DecisionGraph }) {
+function OntologyMap({ graph, validation }: { graph: DecisionGraph; validation?: { valid: boolean; violations: string[] } }) {
   const nodeById = new Map(graph.nodes.map((n) => [n.id, n]));
   const relationRows = graph.edges
     .filter((e) => ['REQUIRES_EVIDENCE', 'VERIFIED_BY', 'COULD_FLIP', 'LEADS_TO_ACTION'].includes(e.relation))
@@ -700,6 +701,10 @@ function OntologyMap({ graph }: { graph: DecisionGraph }) {
         <em>결과가 어떤 의미 구조로 연결됐는지 보기 +</em>
       </summary>
       <div className="ontologyBody">
+        <div className="ontologyValidation">
+          <span className={validation?.valid ? 'valid' : 'review'}>{validation?.valid ? '✓ Semantic constraints passed' : '△ Semantic review needed'}</span>
+          <small>{validation?.valid ? '5-Lens · Question linkage · Graph integrity 검증 완료' : validation?.violations?.join(' · ')}</small>
+        </div>
         <div className="ontologyStats">
           <div><b>{counts.dimensions}</b><span>Domain lenses</span></div>
           <div><b>{counts.unknowns}</b><span>Unknown claims</span></div>
