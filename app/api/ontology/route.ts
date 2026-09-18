@@ -31,6 +31,7 @@ export async function GET() {
           'REQUIRES_EVIDENCE',
           'ASKS',
           'VERIFIED_BY',
+          'PUBLICLY_SUPPORTED_BY',
           'COULD_FLIP',
           'LEADS_TO_ACTION',
         ],
