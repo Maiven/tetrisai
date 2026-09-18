@@ -277,6 +277,36 @@ export default function Home() {
         </div>
       </section>
 
+      <section className="valueLoop section">
+        <p className="eyebrow">REAL PROBLEM → REAL ACTION</p>
+        <h2>좋은 조언을 만드는 것이 아니라,<br />정보 비대칭을 실제 행동으로 줄입니다.</h2>
+        <div className="valueLoopGrid">
+          <article>
+            <span>BEFORE</span>
+            <h3>“연봉이 더 높은데 갈까?”</h3>
+            <p>막연한 기대, 회사가 제공한 정보, 내 불안이 한 문장 안에 섞여 있습니다.</p>
+          </article>
+          <div className="valueArrow">→</div>
+          <article className="valueCore">
+            <span>반대편</span>
+            <h3>5-Lens + Falsification</h3>
+            <p>회사·역할·리더·보상·학습을 분리하고, 사실·가정·미확인과 Flip Condition을 구조화합니다.</p>
+          </article>
+          <div className="valueArrow">→</div>
+          <article>
+            <span>AFTER</span>
+            <h3>“내일 이 3가지를 확인한다.”</h3>
+            <p>누구에게 무엇을 물을지, 어떤 답이면 생각을 바꿀지, 언제 멈출지가 남습니다.</p>
+          </article>
+        </div>
+        <div className="valueMetrics">
+          <div><strong>1</strong><span>막연한 고민</span><i>→</i><b>검증 가능한 결정</b></div>
+          <div><strong>5</strong><span>스타트업 실사 렌즈</span><i>→</i><b>정보 누락 위치 확인</b></div>
+          <div><strong>7일</strong><span>검증 스프린트</span><i>→</i><b>실제 증거 확보 행동</b></div>
+        </div>
+        <p className="valueCaveat">※ “의사결정 정확도가 몇 % 향상된다”는 검증되지 않은 효과를 주장하지 않습니다. 현재 MVP가 직접 만드는 가치는 <b>미확인 정보의 가시화, 질문 생성, 실제 확인 행동의 구조화</b>입니다.</p>
+      </section>
+
       <section className="how section" id="how">
         <p className="eyebrow">STARTUP 5-LENS + FALSIFICATION</p>
         <h2>스타트업 커리어 결정을<br />투자 실사처럼 검증합니다.</h2>
@@ -458,6 +488,42 @@ export default function Home() {
           </div>
         </section>
       )}
+
+      <section className="businessPath section">
+        <p className="eyebrow">BUSINESS PATH</p>
+        <h2>사용자는 직원,<br />지불자는 개인 또는 생태계가 될 수 있습니다.</h2>
+        <p className="sectionLead">개인의 민감한 판단은 끝까지 개인에게 남겨두면서도, 커리어 의사결정이 발생하는 순간에 유료 가치를 만들 수 있습니다.</p>
+        <div className="businessGrid">
+          <article>
+            <span>01 · FREE</span>
+            <h3>Decision Check</h3>
+            <p>5-Lens 실사와 Evidence Loop를 로그인 없이 제공해 유입과 신뢰를 만듭니다.</p>
+            <b>목표 · 문제 검증 + 바이럴</b>
+          </article>
+          <article>
+            <span>02 · B2C</span>
+            <h3>Deep Diligence Pass</h3>
+            <p>두 선택지 비교, 심층 질문팩, 7일 추적, 오퍼·지분 체크리스트를 일회성 유료 상품으로 확장합니다.</p>
+            <b>가설 · 고빈도 구독보다 고의도 순간 결제</b>
+          </article>
+          <article>
+            <span>03 · B2B2C</span>
+            <h3>Sponsored Access</h3>
+            <p>리크루팅 플랫폼·VC·액셀러레이터가 이용권을 제공하되 개인 입력과 결과는 절대 열람하지 못하게 합니다.</p>
+            <b>원칙 · sponsor pays, employee owns data</b>
+          </article>
+          <article>
+            <span>04 · LATER</span>
+            <h3>Decision Intelligence</h3>
+            <p>검증 동의를 받은 Decision Graph를 바탕으로 고불확실성 조직의 의사결정 프로토콜로 확장합니다.</p>
+            <b>조건 · Personal과 Teams 데이터 완전 분리</b>
+          </article>
+        </div>
+        <div className="businessMoat">
+          <b>장기 Moat</b>
+          <span>Prompt가 아니라 <strong>Startup Decision Ontology + Evidence Loop + Outcome-linked Decision Graph + Employee Trust</strong></span>
+        </div>
+      </section>
 
       <footer>
         <b>반대편</b>
