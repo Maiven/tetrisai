@@ -27,6 +27,7 @@ type Analysis = {
   futures: Future[];
   premortem: Premortem[];
   evidenceToCheck: string[];
+  verificationSprint: { horizon: '지금 10분' | '24시간 안' | '7일 안'; action: string; evidence: string }[];
   reversibleExperiment: string;
   decisionRule: string;
   decisionCard: { oneSentence: string; nextCheck: string; stopRule: string };
@@ -127,6 +128,9 @@ export default function Home() {
       '결론을 뒤집을 조건',
       ...a.flipConditions.map((x, i) => `${i + 1}. ${x}`),
       '',
+      '검증 스프린트',
+      ...a.verificationSprint.map((x) => `${x.horizon}: ${x.action} / 확보할 증거: ${x.evidence}`),
+      '',
       `가장 작은 검증: ${a.reversibleExperiment}`,
       `중단 조건: ${a.decisionCard.stopRule}`,
       '',
@@ -206,7 +210,7 @@ export default function Home() {
         <div className="trustline">
           <span>◉ 로그인·회원가입 없이 바로 체험</span>
           <span>◐ 직원 편의 5-Lens Due Diligence</span>
-          <span>◎ 회사 생존·지분가치를 임의 예측하지 않음</span>
+          <span>◎ 10분→24시간→7일 실제 검증 행동으로 연결</span>
         </div>
       </section>
 
@@ -313,6 +317,25 @@ export default function Home() {
             </article>
 
             <StartupDiligence items={result.analysis.startupDiligence} />
+
+            <article className="verificationSprint">
+              <div className="sprintHead">
+                <div>
+                  <p className="panelLabel">FROM INSIGHT TO EVIDENCE</p>
+                  <h3>AI 답변으로 끝내지 않고, 7일 안에 실제 증거를 모읍니다.</h3>
+                </div>
+                <span>10분 → 24시간 → 7일</span>
+              </div>
+              <div className="sprintGrid">
+                {result.analysis.verificationSprint.map((x, i) => (
+                  <section key={x.horizon}>
+                    <div className="sprintTime"><i>{String(i + 1).padStart(2, '0')}</i><b>{x.horizon}</b></div>
+                    <p>{x.action}</p>
+                    <div><small>완료 증거</small><strong>{x.evidence}</strong></div>
+                  </section>
+                ))}
+              </div>
+            </article>
 
             <div className="resultGrid">
               <EvidenceLedger items={result.analysis.evidenceLedger} />
