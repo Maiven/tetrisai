@@ -303,12 +303,13 @@ function normalizeContext(value: unknown): StartupContext {
 
 export async function POST(req: Request) {
   let question = '';
+  let publicEvidence: string[] = [];
   try {
     const body = await req.json();
     question = typeof body?.question === 'string' ? body.question.trim() : '';
     const context = normalizeContext(body?.context);
     const verifiedEvidence = normalizeEvidence(body?.verifiedEvidence);
-    const publicEvidence = normalizePublicEvidence(body?.publicEvidence);
+    publicEvidence = normalizePublicEvidence(body?.publicEvidence);
 
     if (body?.demo === true) {
       const graph = buildDecisionGraph(DEMO_ANALYSIS, question || DEMO_ANALYSIS.reframedDecision, [], []);
