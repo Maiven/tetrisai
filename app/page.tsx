@@ -185,6 +185,21 @@ export default function Home() {
             <a href="https://onlinelibrary.wiley.com/doi/10.1002/bdm.3960020103" target="_blank" rel="noreferrer">Mitchell, Russo & Pennington · JBDM ↗</a>
           </div>
         </div>
+
+        <div className="engineBlock">
+          <div className="engineIntro">
+            <p className="eyebrow">WHY AI · HOW AI</p>
+            <h3>자유로운 고민은 AI가 읽고,<br />판단 구조는 규칙이 통제합니다.</h3>
+            <p>자연어로 들어오는 복잡한 맥락은 생성형 AI가 해석하지만, 결과는 미리 정의된 구조 안에서만 생성됩니다. 그래서 “그럴듯한 상담”보다 비교·검증 가능한 결과를 만듭니다.</p>
+          </div>
+          <div className="engineGrid">
+            <div><span>01</span><b>Context Parsing</b><p>GPT-5.6 Sol이 사용자의 맥락과 실제 결정 변수를 구조화합니다.</p></div>
+            <div><span>02</span><b>Structured Output</b><p>사실·가정·반증조건·pre-mortem을 고정 스키마로 반환합니다.</p></div>
+            <div><span>03</span><b>Human Agency</b><p>AI가 A/B를 선택하지 않고 사용자가 확인할 증거와 중단 조건을 남깁니다.</p></div>
+            <div><span>04</span><b>Failure-safe</b><p>AI 호출 실패 시에도 로컬 프레임워크와 즉시 데모로 핵심 경험을 유지합니다.</p></div>
+          </div>
+          <div className="stackLine"><b>Built with</b><span>Next.js · React · OpenAI GPT-5.6 Sol · Vercel AI SDK · Vercel AI Gateway</span></div>
+        </div>
       </section>
 
       {result && (
