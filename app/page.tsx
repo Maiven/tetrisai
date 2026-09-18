@@ -213,9 +213,9 @@ export default function Home() {
       <section className="startupTarget section" id="for-startup">
         <p className="eyebrow">BEACHHEAD USER</p>
         <h2>특히 이런 스타트업 종사자를 위해 만들었습니다.</h2>
-        <p className="sectionLead">Seed~Series C, 약 20~200명 규모에서 일하는 3~10년차 지식노동자를 첫 고객으로 봅니다. 한 사람이 여러 역할을 맡고, 회사 정보는 제한적이며, 한 번의 잘못된 커리어 결정이 6~24개월의 시간을 바꿀 수 있는 사람입니다.</p>
+        <p className="sectionLead">1차 유료 고객은 <b>Seed~Series B, 약 20~100명 규모의 3~8년차 PM·Data/AI·Engineering 실무자</b>로 더 좁힙니다. 회사의 핵심 실행을 맡지만 모든 경영정보에 접근하지는 못하고, 이직·잔류·리드 역할·스톡옵션 같은 결정의 비용은 이미 커진 사람들입니다. 다른 직군과 단계도 사용할 수 있지만, 제품 학습은 이 집단에서 먼저 시작합니다.</p>
         <div className="personaBar">
-          <span>PM·Product</span><span>Data·AI</span><span>Engineering</span><span>Design</span><span>Growth</span><span>BD·Sales</span><span>Operations·People</span>
+          <span className="primaryPersona">PM·Product · PRIMARY</span><span className="primaryPersona">Data·AI · PRIMARY</span><span className="primaryPersona">Engineering · PRIMARY</span><span>Design</span><span>Growth</span><span>BD·Sales</span><span>Operations·People</span>
         </div>
         <div className="decisionCases">
           {[
@@ -384,7 +384,7 @@ export default function Home() {
       <footer>
         <b>반대편</b>
         <span>Startup Employee Due Diligence · Falsify Before You Decide.</span>
-        <small>로그인 없이 체험할 수 있습니다. 입력 내용은 서비스 DB에 별도로 저장하지 않도록 설계했으며, AI 분석 요청은 모델 제공 경로를 통해 처리될 수 있습니다. 회사명·실명·비공개 경영정보는 입력하지 마세요.</small>
+        <small>로그인 없이 체험할 수 있습니다. 입력 내용은 서비스 DB에 별도로 저장하지 않도록 설계했으며, AI 분석 요청은 모델 제공 경로를 통해 처리될 수 있습니다. 회사명·실명·비공개 경영정보는 입력하지 마세요.</small><div className="footerLinks"><a href="/methodology">방법론</a><a href="/privacy">프라이버시 원칙</a><a href="https://github.com/Maiven/tetrisai" target="_blank" rel="noreferrer">GitHub</a></div>
       </footer>
 
       {loading && <div className="loading"><div><span className="spinner" /><h3>직원 편에서 회사를 실사하고 있습니다.</h3><p>회사 → 역할 → 리더 → 보상 → 학습 → 반증 조건</p><small>AI가 퇴사·입사를 대신 결정하지 않습니다.</small></div></div>}
