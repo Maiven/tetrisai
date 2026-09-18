@@ -23,6 +23,7 @@ export type OntologyNodeType =
 export type OntologyProvenance =
   | 'user_input'
   | 'user_verified'
+  | 'public_source'
   | 'model_structured'
   | 'system_ontology';
 
@@ -41,6 +42,7 @@ export type OntologyRelation =
   | 'REQUIRES_EVIDENCE'
   | 'ASKS'
   | 'VERIFIED_BY'
+  | 'PUBLICLY_SUPPORTED_BY'
   | 'COULD_FLIP'
   | 'LEADS_TO_ACTION';
 
@@ -155,6 +157,7 @@ export function buildDecisionGraph(
   analysis: GraphAnalysis,
   question: string,
   verifiedEvidence: string[] = [],
+  publicEvidence: string[] = [],
 ): DecisionGraph {
   const nodes: OntologyNode[] = [
     {
@@ -225,6 +228,28 @@ export function buildDecisionGraph(
 
     if (dimIndex >= 0) {
       edges.push({ source: nodeId('dimension', dimIndex), relation: 'VERIFIED_BY', target: id });
+    }
+  });
+
+  publicEvidence.slice(0, 8).forEach((item, index) => {
+    const id = nodeId('public_evidence', index);
+    const [dimension, ...rest] = item.split(':');
+    const label = rest.join(':').trim() || item;
+    const dimIndex = analysis.startupDiligence.findIndex((x) => x.dimension === dimension.trim());
+
+    nodes.push({
+      id,
+      type: 'Evidence',
+      label,
+      status: 'inferred',
+      provenance: 'public_source',
+      dimension: DIMENSION_TO_MODULE[dimension.trim()],
+    });
+
+    if (dimIndex >= 0) {
+      edges.push({ source: nodeId('dimension', dimIndex), relation: 'PUBLICLY_SUPPORTED_BY', target: id });
+    } else {
+      edges.push({ source: 'decision_1', relation: 'HAS_CLAIM', target: id });
     }
   });
 
