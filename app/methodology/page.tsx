@@ -140,11 +140,79 @@ export default function MethodologyPage() {
       </section>
 
       <section>
+        <h2>2026 Ontology / Knowledge Graph architecture</h2>
+        <p>반대편은 단순 prompt template가 아니라 <b>모듈형 Startup Decision Ontology</b>를 semantic layer로 사용합니다. Decision, Company, Role, Leadership, Compensation, Learning, Evidence, Action 모듈을 분리하고, 사용자의 상황에 맞는 모듈을 prompt context로 우선 주입합니다.</p>
+        <div className="legalGrid">
+          <div><b>Modular ontology</b><p>도메인 개념을 작은 모듈로 분리해 확장과 수정 비용을 낮춥니다.</p></div>
+          <div><b>Typed decision graph</b><p>Decision → Dimension → Claim/Evidence → Question → Flip Condition → Action 관계를 타입으로 고정합니다.</p></div>
+          <div><b>Provenance</b><p>각 node가 user input, user-verified evidence, model-structured output, system ontology 중 어디서 왔는지 표시합니다.</p></div>
+          <div><b>Semantic constraints</b><p>5-Lens가 모두 존재하는지, 각 Lens가 실제 검증 질문에 연결되는지, graph edge가 유효한 node를 가리키는지 서버에서 검사합니다.</p></div>
+          <div><b>JSON-LD contract</b><p>온톨로지 정의를 machine-readable JSON-LD로 공개해 향후 GraphRAG·external data connector와 연결할 기반을 둡니다.</p></div>
+        </div>
+        <p><a href="/api/ontology" target="_blank" rel="noreferrer">Startup Decision Ontology JSON-LD 보기 ↗</a></p>
+        <div className="researchCards">
+          <article>
+            <span>MODULAR ONTOLOGY ENGINEERING</span>
+            <b>LLM 시대에도 온톨로지는 작고 모듈식이어야 합니다.</b>
+            <p>2025년 Journal of Web Semantics 연구는 LLM을 ontology/KG engineering에 활용할 때 ontology modeling·extension·alignment 등을 가속할 수 있으며, modular approaches가 중요하다고 제안합니다. 반대편은 하나의 거대한 taxonomy보다 8개 모듈을 분리합니다.</p>
+            <a href="https://www.sciencedirect.com/science/article/pii/S1570826825000022" target="_blank" rel="noreferrer">Journal of Web Semantics, 2025 ↗</a>
+          </article>
+          <article>
+            <span>ONTOLOGY-GUIDED RAG</span>
+            <b>검색 전에 의미 구조가 있어야 관련 관계를 잃지 않습니다.</b>
+            <p>2025년 ontology-guided RAG 연구는 필요한 ontology segment를 검색 context로 사용해 relation extraction을 돕는 구조를 제시했습니다. 반대편 MVP는 외부 corpus RAG 대신 같은 원리로 사용자의 decision type에 따라 semantic module priority를 조절합니다.</p>
+            <a href="https://journals.sagepub.com/doi/10.3233/SSW250006" target="_blank" rel="noreferrer">Semantic Web, 2025 ↗</a>
+          </article>
+          <article>
+            <span>KG-GUIDED RETRIEVAL</span>
+            <b>관련 문장만 찾는 것보다 관계 구조를 보존합니다.</b>
+            <p>NAACL 2025 KG²RAG는 knowledge graph를 이용해 seed chunk 주변의 관련 관계를 확장·조직하는 방식을 제시했습니다. 반대편의 장기 확장에서도 기업 공개정보를 단순 chunk가 아니라 Company↔Financing↔Role↔Evidence 관계로 검색하는 방향을 택합니다.</p>
+            <a href="https://aclanthology.org/2025.naacl-long.449/" target="_blank" rel="noreferrer">NAACL, 2025 ↗</a>
+          </article>
+          <article>
+            <span>ONTOLOGY + DECISION SUPPORT</span>
+            <b>온톨로지는 “검색 기술”보다 의사결정 구조 자체가 될 수 있습니다.</b>
+            <p>2026년 IEEE 연구는 problem clarification, user preference, domain knowledge, alternatives를 ontology-driven representation과 결합하는 LLM decision-support architecture를 제안합니다. 반대편은 이를 직원 커리어 실사 domain에 좁혀 적용합니다.</p>
+            <a href="https://ieeexplore.ieee.org/document/11506563" target="_blank" rel="noreferrer">IEEE FRUCT, 2026 ↗</a>
+          </article>
+        </div>
+      </section>
+
+      <section>
+        <h2>초기사용자 이탈을 줄이기 위한 onboarding 원칙</h2>
+        <div className="researchCards">
+          <article>
+            <span>ONE-SENTENCE ACTIVATION</span>
+            <b>첫 가치는 한 문장 입력에서 시작합니다.</b>
+            <p>첫 화면에서 회사 단계·직무·규모를 필수로 요구하지 않습니다. 핵심 입력 하나만 먼저 받고, 추가 context는 progressive disclosure로 숨깁니다. optional input이 주 흐름을 방해하지 않게 하기 위한 선택입니다.</p>
+            <a href="https://baymard.com/research-articles/current-state-of-checkout-ux" target="_blank" rel="noreferrer">Baymard large-scale UX testing ↗</a>
+          </article>
+          <article>
+            <span>QUICK START</span>
+            <b>빈 화면에서 “무엇을 써야 하지?”를 고민하지 않게 합니다.</b>
+            <p>오퍼·회사 불안·역할 확장·스톡옵션의 4개 상황을 one-click entry로 제공합니다. 2025년 onboarding visual-guide 연구가 보여주는 first-service-point의 중요성을 “투어”보다 바로 성공하는 scenario starter로 번역했습니다.</p>
+            <a href="https://www.sciencedirect.com/science/article/pii/S0141938225000125" target="_blank" rel="noreferrer">Displays, 2025 ↗</a>
+          </article>
+          <article>
+            <span>MICRO-INTERVENTION</span>
+            <b>모든 기능을 배우는 대신 첫 행동 하나를 성공시킵니다.</b>
+            <p>결과 최상단에는 NEXT CHECK / FIRST 10 MIN / STOP RULE만 먼저 보여줍니다. 이후 5-Lens와 semantic map은 필요할 때 읽습니다. 디지털 onboarding 연구의 micro-intervention·journal 구조에서 작은 성공 단위라는 설계 원칙을 참고했습니다.</p>
+            <a href="https://onlinelibrary.wiley.com/doi/full/10.1111/ejed.70369" target="_blank" rel="noreferrer">European Journal of Education, 2025 ↗</a>
+          </article>
+          <article>
+            <span>PROGRESSIVE COMPLEXITY</span>
+            <b>온톨로지는 제품을 복잡하게 보이게 하지 않습니다.</b>
+            <p>Semantic Decision Map은 기본 접힘 상태입니다. 초기사용자는 행동만 보고, 심사위원·파워유저는 provenance·relations·constraint validation까지 확인할 수 있습니다.</p>
+          </article>
+        </div>
+      </section>
+
+      <section>
         <h2>AI가 하는 일과 하지 않는 일</h2>
         <p>생성형 AI는 사용자의 자유로운 문맥을 읽고 구조화된 실사 스키마에 맞춰 질문과 반증 조건을 만듭니다. AI는 퇴사·입사 여부를 대신 선택하지 않고, 외부 근거가 없는 회사 생존 확률·AI 자신감 점수·지분 미래가치를 만들어내지 않습니다. 회사 내부의 비공개 사실은 “모름”으로 남기고 실제 사람과 문서에 질문하도록 바꿉니다.</p>
       </section>
 
-      <p className="legalDate">Research notes updated · 2026-09-18</p>
+      <p className="legalDate">Research notes updated · 2026-09-19</p>
     </main>
   );
 }
