@@ -258,3 +258,50 @@ export function buildDecisionGraph(
     edges,
   };
 }
+
+
+export type OntologyValidation = {
+  valid: boolean;
+  violations: string[];
+};
+
+export function validateDecisionGraph(graph: DecisionGraph): OntologyValidation {
+  const violations: string[] = [];
+  const ids = new Set(graph.nodes.map((n) => n.id));
+
+  for (const edge of graph.edges) {
+    if (!ids.has(edge.source)) violations.push(`Missing source node: ${edge.source}`);
+    if (!ids.has(edge.target)) violations.push(`Missing target node: ${edge.target}`);
+  }
+
+  const dimensions = graph.nodes.filter((n) => n.type === 'Dimension');
+  if (dimensions.length !== 5) {
+    violations.push(`Expected 5 ontology dimensions, found ${dimensions.length}`);
+  }
+
+  for (const dimension of dimensions) {
+    const hasQuestion = graph.edges.some(
+      (e) =>
+        e.source === dimension.id &&
+        e.relation === 'REQUIRES_EVIDENCE' &&
+        graph.nodes.some((n) => n.id === e.target && n.type === 'Question'),
+    );
+    if (!hasQuestion) {
+      violations.push(`Dimension ${dimension.label} has no evidence question`);
+    }
+  }
+
+  const decision = graph.nodes.find((n) => n.type === 'Decision');
+  if (!decision) {
+    violations.push('Decision root node is missing');
+  } else {
+    const linkedDimensions = graph.edges.filter(
+      (e) => e.source === decision.id && e.relation === 'HAS_DIMENSION',
+    ).length;
+    if (linkedDimensions !== 5) {
+      violations.push(`Decision must connect to 5 dimensions, found ${linkedDimensions}`);
+    }
+  }
+
+  return { valid: violations.length === 0, violations };
+}
