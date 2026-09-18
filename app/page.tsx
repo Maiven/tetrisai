@@ -34,12 +34,49 @@ type Analysis = {
   decisionCard: { oneSentence: string; nextCheck: string; stopRule: string };
   riskNotice: string;
 };
-type ApiResult = { mode: 'ai' | 'fallback' | 'demo'; model: string; analysis: Analysis };
+type OntologyNode = {
+  id: string;
+  type: 'Decision' | 'Dimension' | 'Claim' | 'Evidence' | 'Unknown' | 'Question' | 'FlipCondition' | 'VerificationAction';
+  label: string;
+  status?: string;
+  provenance: 'user_input' | 'user_verified' | 'model_structured' | 'system_ontology';
+  dimension?: string;
+};
+type OntologyEdge = {
+  source: string;
+  relation: 'HAS_DIMENSION' | 'HAS_CLAIM' | 'REQUIRES_EVIDENCE' | 'ASKS' | 'VERIFIED_BY' | 'COULD_FLIP' | 'LEADS_TO_ACTION';
+  target: string;
+};
+type DecisionGraph = { ontologyVersion: string; nodes: OntologyNode[]; edges: OntologyEdge[] };
+type ApiResult = {
+  mode: 'ai' | 'fallback' | 'demo';
+  model: string;
+  analysis: Analysis;
+  ontologyGraph?: DecisionGraph;
+  ontologyVersion?: string;
+};
 
-const EXAMPLES = [
-  'Series A 스타트업 오퍼를 받았는데 연봉은 10% 낮고 스톡옵션이 있습니다. 옮겨야 할까?',
-  '투자 지연과 채용 동결이 반복되는데 지금 회사를 계속 다녀야 할까?',
-  '직함은 리드로 올라가지만 권한과 보상은 그대로입니다. 역할을 받아야 할까?',
+const QUICK_STARTS = [
+  {
+    label: '오퍼를 받았어요',
+    meta: 'JOIN',
+    question: 'Series A 스타트업 오퍼를 받았는데 연봉과 스톡옵션만 보고 결정해도 될지 고민입니다. 무엇을 확인해야 할까요?',
+  },
+  {
+    label: '회사 상황이 불안해요',
+    meta: 'STAY / LEAVE',
+    question: '투자 지연과 채용 동결이 반복되고 있습니다. 지금 회사를 계속 다닐지 무엇을 확인하고 판단해야 할까요?',
+  },
+  {
+    label: '역할만 커졌어요',
+    meta: 'ROLE',
+    question: '리드 역할을 제안받았지만 실제 권한과 보상이 따라오는지 모르겠습니다. 무엇을 확인해야 할까요?',
+  },
+  {
+    label: '스톡옵션이 궁금해요',
+    meta: 'EQUITY',
+    question: '스타트업 스톡옵션을 제안받았습니다. 옵션 개수 말고 어떤 조건을 확인해야 의사결정을 할 수 있을까요?',
+  },
 ];
 
 const DECISION_TYPES = ['선택 안 함', '스타트업 합류', '잔류 vs 이직', '역할·승진', '보상·스톡옵션', '조직개편·리더변경', '팀·프로젝트 결정'];
@@ -207,6 +244,14 @@ export default function Home() {
             <h1>입사·잔류·이직 전에,<br /><em>회사보다 내 결정을 먼저 실사하세요.</em></h1>
             <p className="lead">스타트업은 정보가 부족한데 결정은 빠릅니다. 반대편은 회사·역할·리더·보상·학습의 다섯 영역에서 아직 증명되지 않은 것을 찾아 직원 편에서 결정을 검증합니다.</p>
 
+            <div className="activationRail" aria-label="반대편 이용 순서">
+              <div><i>1</i><span><b>고민 한 문장</b><small>회사명 없이 익명으로</small></span></div>
+              <em>→</em>
+              <div><i>2</i><span><b>AI 실사</b><small>모르는 것을 질문으로</small></span></div>
+              <em>→</em>
+              <div><i>3</i><span><b>실제 확인</b><small>새 증거로 다시 분석</small></span></div>
+            </div>
+
             <form className="decisionBox" onSubmit={submit}>
               <label htmlFor="decision-input">지금 스타트업에서 고민하고 있는 결정을 적어보세요.</label>
               <textarea
@@ -241,10 +286,16 @@ export default function Home() {
               {error && <p className="error">{error}</p>}
             </form>
 
-            <div className="examples">
-              <span>바로 체험</span>
-              {EXAMPLES.map((x) => <button key={x} onClick={() => analyze(x)}>{x}</button>)}
-              <button className="demo" onClick={() => analyze(DEMO, true)}>▶ 로그인 없이 10초 데모</button>
+            <div className="quickStart">
+              <div className="quickStartHead"><b>입력하기 어렵다면, 지금 상황부터 고르세요.</b><span>1-click quick start</span></div>
+              <div className="quickStartGrid">
+                {QUICK_STARTS.map((x) => (
+                  <button key={x.meta} onClick={() => analyze(x.question)}>
+                    <small>{x.meta}</small><strong>{x.label}</strong><span>바로 실사 →</span>
+                  </button>
+                ))}
+              </div>
+              <button className="instantDemo" onClick={() => analyze(DEMO, true)}>▶ 입력 없이 10초 데모 보기</button>
             </div>
           </div>
 
@@ -423,6 +474,12 @@ export default function Home() {
               <div className="reframe"><span>다시 정의한 진짜 질문</span><p>{result.analysis.realQuestion}</p></div>
             </article>
 
+            <div className="activationBrief">
+              <div><span>NEXT CHECK</span><b>{result.analysis.decisionCard.nextCheck}</b></div>
+              <div><span>FIRST 10 MIN</span><b>{result.analysis.verificationSprint[0]?.action}</b></div>
+              <div><span>STOP RULE</span><b>{result.analysis.decisionCard.stopRule}</b></div>
+            </div>
+
             <div className="relianceGuardrail">
               <span>AI RELIANCE GUARDRAIL</span>
               <div><b>추천 점수 없음</b><small>AI가 수락/퇴사를 대신 고르지 않습니다.</small></div>
@@ -464,6 +521,8 @@ export default function Home() {
               </button>
               {evidenceLoopMessage && <p className="evidenceLoopMessage">{evidenceLoopMessage}</p>}
             </article>
+
+            {result.ontologyGraph && <OntologyMap graph={result.ontologyGraph} />}
 
             <article className="verificationSprint">
               <div className="sprintHead">
@@ -612,6 +671,69 @@ export default function Home() {
   );
 }
 
+function OntologyMap({ graph }: { graph: DecisionGraph }) {
+  const nodeById = new Map(graph.nodes.map((n) => [n.id, n]));
+  const relationRows = graph.edges
+    .filter((e) => ['REQUIRES_EVIDENCE', 'VERIFIED_BY', 'COULD_FLIP', 'LEADS_TO_ACTION'].includes(e.relation))
+    .slice(0, 12);
+  const counts = {
+    dimensions: graph.nodes.filter((n) => n.type === 'Dimension').length,
+    unknowns: graph.nodes.filter((n) => n.type === 'Unknown').length,
+    verified: graph.nodes.filter((n) => n.type === 'Evidence' && n.provenance === 'user_verified').length,
+    actions: graph.nodes.filter((n) => n.type === 'VerificationAction').length,
+  };
+
+  const relationLabel: Record<OntologyEdge['relation'], string> = {
+    HAS_DIMENSION: 'HAS DIMENSION',
+    HAS_CLAIM: 'HAS CLAIM',
+    REQUIRES_EVIDENCE: 'NEEDS',
+    ASKS: 'ASKS',
+    VERIFIED_BY: 'VERIFIED BY',
+    COULD_FLIP: 'COULD FLIP',
+    LEADS_TO_ACTION: 'LEADS TO',
+  };
+
+  return (
+    <details className="ontologyMap">
+      <summary>
+        <span><b>Semantic Decision Map</b><small>온톨로지 v{graph.ontologyVersion} · 고급 보기</small></span>
+        <em>결과가 어떤 의미 구조로 연결됐는지 보기 +</em>
+      </summary>
+      <div className="ontologyBody">
+        <div className="ontologyStats">
+          <div><b>{counts.dimensions}</b><span>Domain lenses</span></div>
+          <div><b>{counts.unknowns}</b><span>Unknown claims</span></div>
+          <div><b>{counts.verified}</b><span>User evidence</span></div>
+          <div><b>{counts.actions}</b><span>Actions</span></div>
+        </div>
+        <div className="ontologyRelations">
+          {relationRows.map((edge, i) => {
+            const source = nodeById.get(edge.source);
+            const target = nodeById.get(edge.target);
+            if (!source || !target) return null;
+            return (
+              <div key={`${edge.source}-${edge.relation}-${edge.target}-${i}`}>
+                <span className={`ontoType onto-${source.provenance}`}>{source.type}</span>
+                <p>{source.label}</p>
+                <i>{relationLabel[edge.relation]}</i>
+                <span className={`ontoType onto-${target.provenance}`}>{target.type}</span>
+                <p>{target.label}</p>
+              </div>
+            );
+          })}
+        </div>
+        <div className="ontologyLegend">
+          <span><i className="onto-user_input" />사용자 입력</span>
+          <span><i className="onto-user_verified" />사용자가 확인한 증거</span>
+          <span><i className="onto-model_structured" />AI 구조화</span>
+          <span><i className="onto-system_ontology" />시스템 온톨로지</span>
+        </div>
+        <p className="ontologyNote">이 그래프는 AI가 자유롭게 만든 “설명”이 아니라, Decision → Domain → Evidence → Question → Action 관계를 타입으로 고정한 semantic layer입니다. 개인 정보는 그래프를 별도 DB에 저장하지 않습니다.</p>
+      </div>
+    </details>
+  );
+}
+
 function ContextSelect({ label, value, options, onChange }: { label: string; value: string; options: string[]; onChange: (value: string) => void }) {
   return (
     <label className="contextSelect">
@@ -687,3 +809,4 @@ function StartupDiligence({
     </article>
   );
 }
+
