@@ -22,6 +22,17 @@ type Analysis = {
   evidenceLedger: EvidenceItem[];
   startupDiligence: DiligenceItem[];
   realityCheck: { negativePreview: string; alternativeQuality: string; promiseGap: string };
+  sourceAudit: {
+    present: boolean;
+    claims: {
+      dimension: DiligenceItem['dimension'];
+      claim: string;
+      classification: '문서상 약속' | '구체 조건' | '모호한 표현';
+      verificationQuestion: string;
+    }[];
+    missingTerms: string[];
+    note: string;
+  };
   flipConditions: string[];
   reversibility: { level: '높음' | '중간' | '낮음'; explanation: string; costToReverse: string };
   decisionTension: { actTooSoon: string; waitTooLong: string };
@@ -143,6 +154,7 @@ export default function Home() {
   const [publicResearch, setPublicResearch] = useState<PublicEvidenceResult | null>(null);
   const [publicLoading, setPublicLoading] = useState(false);
   const [publicError, setPublicError] = useState('');
+  const [sourceExcerpt, setSourceExcerpt] = useState('');
   const [passport, setPassport] = useState<SavedPassport | null>(null);
   const [passportMessage, setPassportMessage] = useState('');
   const resultsRef = useRef<HTMLElement | null>(null);
@@ -199,7 +211,14 @@ export default function Home() {
       const res = await fetch('/api/analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ question: q || DEMO, demo, context: normalizedContext, verifiedEvidence, publicEvidence }),
+        body: JSON.stringify({
+          question: q || DEMO,
+          demo,
+          context: normalizedContext,
+          verifiedEvidence,
+          publicEvidence,
+          sourceExcerpt,
+        }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || '분석에 실패했습니다.');
@@ -416,6 +435,16 @@ export default function Home() {
                     <ContextSelect label="분석 전 내 기울기" value={context.initialLean} options={INITIAL_LEANS} onChange={(v) => updateContext('initialLean', v)} />
                   </div>
                   <p className="contextHint">초기 기울기는 AI가 맞춰줘야 할 답이 아니라, 반증할 <b>가설</b>로만 사용합니다.</p>
+                  <label className="sourceExcerptInput">
+                    <span>공개 채용공고 / 익명화한 오퍼·역할 요약 · 선택</span>
+                    <textarea
+                      maxLength={4000}
+                      value={sourceExcerpt}
+                      onChange={(e) => setSourceExcerpt(e.target.value)}
+                      placeholder="회사명·실명·고객정보·비공개 재무수치·계약 원문을 제거한 뒤, 역할/권한/보상/성장에 관한 문구만 붙여넣으세요."
+                    />
+                    <small>{sourceExcerpt.length}/4000 · 문서 문구는 ‘현실의 사실’이 아니라 검증할 약속으로 취급합니다.</small>
+                  </label>
                 </div>
               </details>
 
@@ -636,6 +665,8 @@ export default function Home() {
               onCopyQuestion={copyQuestion}
             />
 
+            {result.analysis.sourceAudit.present && <SourceAuditPanel audit={result.analysis.sourceAudit} onCopyQuestion={copyQuestion} />}
+
             <PublicEvidenceLab
               company={publicCompany}
               website={publicWebsite}
@@ -827,6 +858,38 @@ export default function Home() {
 
       {loading && <div className="loading"><div><span className="spinner" /><h3>직원 편에서 회사를 실사하고 있습니다.</h3><p>회사 → 역할 → 리더 → 보상 → 학습 → 반증 조건</p><small>AI가 퇴사·입사를 대신 결정하지 않습니다.</small></div></div>}
     </main>
+  );
+}
+
+function SourceAuditPanel({
+  audit,
+  onCopyQuestion,
+}: {
+  audit: Analysis['sourceAudit'];
+  onCopyQuestion: (text: string) => void;
+}) {
+  return (
+    <article className="sourceAuditPanel">
+      <div className="sourceAuditHead">
+        <div><p className="panelLabel">SOURCE AUDIT · JOB / OFFER PROMISES</p><h3>문서에 적힌 약속과 현실에서 검증할 것을 분리했습니다.</h3></div>
+        <span>user-provided artifact</span>
+      </div>
+      <div className="sourceAuditGrid">
+        {audit.claims.map((x, i) => (
+          <section key={`${x.dimension}-${i}`}>
+            <div><b>{x.dimension}</b><span className={`sourceClass source-${x.classification.replaceAll(' ', '-')}`}>{x.classification}</span></div>
+            <p>{x.claim}</p>
+            <small>현실 확인 질문</small>
+            <strong>{x.verificationQuestion}</strong>
+            <button onClick={() => onCopyQuestion(x.verificationQuestion)}>질문 복사</button>
+          </section>
+        ))}
+      </div>
+      {audit.missingTerms.length > 0 && (
+        <div className="missingTerms"><b>문서에서 빠졌거나 모호한 조건</b>{audit.missingTerms.map((x, i) => <span key={i}>{x}</span>)}</div>
+      )}
+      <p className="sourceAuditNote">{audit.note}</p>
+    </article>
   );
 }
 
