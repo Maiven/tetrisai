@@ -2,9 +2,9 @@ name: Decision Mirror CI
 
 on:
   push:
-    branches: [decision-mirror-vercel]
+    branches: [gh-pages, main, decision-mirror-vercel]
   pull_request:
-    branches: [gh-pages]
+    branches: [gh-pages, main]
   workflow_dispatch:
 
 jobs:
