@@ -12,7 +12,7 @@ type DiligenceItem = {
   missingEvidence: string;
   questionToAsk: string;
 };
-type StartupContext = { decisionType: string; stage: string; role: string; headcount: string };
+type StartupContext = { decisionType: string; stage: string; role: string; headcount: string; initialLean: string };
 type Analysis = {
   reframedDecision: string;
   realQuestion: string;
@@ -21,6 +21,7 @@ type Analysis = {
   blindSpots: string[];
   evidenceLedger: EvidenceItem[];
   startupDiligence: DiligenceItem[];
+  realityCheck: { negativePreview: string; alternativeQuality: string; promiseGap: string };
   flipConditions: string[];
   reversibility: { level: '높음' | '중간' | '낮음'; explanation: string; costToReverse: string };
   decisionTension: { actTooSoon: string; waitTooLong: string };
@@ -45,6 +46,7 @@ const DECISION_TYPES = ['선택 안 함', '스타트업 합류', '잔류 vs 이�
 const STAGES = ['선택 안 함', 'Pre-seed', 'Seed', 'Series A', 'Series B', 'Series C+', '투자단계 모름/비VC'];
 const ROLES = ['선택 안 함', 'Product/PM', 'Data/AI', 'Engineering', 'Design', 'Growth/Marketing', 'BD/Sales', 'Operations/People', 'Founder/Lead', 'Other'];
 const HEADCOUNTS = ['선택 안 함', '1~19명', '20~50명', '51~200명', '201명 이상', '모름'];
+const INITIAL_LEANS = ['선택 안 함', '실행/합류 쪽', '보류/잔류 쪽', '반대 선택지 쪽', '아직 모름'];
 
 const DEMO = '현재 직장은 안정적이지만 성장 속도가 느립니다. 연봉이 15% 높은 Series A 스타트업으로 이직 제안을 받았고 스톡옵션도 있습니다.';
 const DEMO_CONTEXT: StartupContext = {
@@ -52,6 +54,7 @@ const DEMO_CONTEXT: StartupContext = {
   stage: 'Series A',
   role: 'Data/AI',
   headcount: '51~200명',
+  initialLean: '실행/합류 쪽',
 };
 
 export default function Home() {
@@ -61,6 +64,7 @@ export default function Home() {
     stage: '선택 안 함',
     role: '선택 안 함',
     headcount: '선택 안 함',
+    initialLean: '선택 안 함',
   });
   const [result, setResult] = useState<ApiResult | null>(null);
   const [loading, setLoading] = useState(false);
@@ -68,6 +72,7 @@ export default function Home() {
   const [copied, setCopied] = useState(false);
   const [evidenceNotes, setEvidenceNotes] = useState<Record<string, string>>({});
   const [evidenceLoopMessage, setEvidenceLoopMessage] = useState('');
+  const [reflection, setReflection] = useState('');
   const resultsRef = useRef<HTMLElement | null>(null);
   const count = useMemo(() => question.length, [question]);
   const evidenceCount = useMemo(
@@ -87,6 +92,7 @@ export default function Home() {
     if (demo) setContext(DEMO_CONTEXT);
     setQuestion(q || DEMO);
     if (verifiedEvidence.length === 0) {
+      setReflection('');
       setEvidenceNotes({});
       setEvidenceLoopMessage('');
     }
@@ -159,6 +165,11 @@ export default function Home() {
       '5-Lens 실사',
       ...due,
       '',
+      'Reality Check',
+      `- 부정적 현실: ${a.realityCheck.negativePreview}`,
+      `- 대안의 질: ${a.realityCheck.alternativeQuality}`,
+      `- 약속-현실 차이: ${a.realityCheck.promiseGap}`,
+      '',
       '결론을 뒤집을 조건',
       ...a.flipConditions.map((x, i) => `${i + 1}. ${x}`),
       '',
@@ -206,18 +217,22 @@ export default function Home() {
                 placeholder="예: 투자 지연이 반복되고 제 역할은 계속 넓어지는데, 지금 회사를 계속 다녀야 할까?"
               />
 
-              <div className="contextBox">
-                <div className="contextTitle">
-                  <b>스타트업 컨텍스트</b>
-                  <span>선택사항 · 정확할수록 질문이 구체적입니다.</span>
+              <details className="contextDisclosure">
+                <summary>
+                  <span><b>선택사항</b> · 스타트업 상황 더 알려주기</span>
+                  <small>회사 단계·직무·현재 기울기를 추가하면 질문이 더 구체적입니다.</small>
+                </summary>
+                <div className="contextBox">
+                  <div className="contextGrid">
+                    <ContextSelect label="결정 유형" value={context.decisionType} options={DECISION_TYPES} onChange={(v) => updateContext('decisionType', v)} />
+                    <ContextSelect label="회사 단계" value={context.stage} options={STAGES} onChange={(v) => updateContext('stage', v)} />
+                    <ContextSelect label="내 직무" value={context.role} options={ROLES} onChange={(v) => updateContext('role', v)} />
+                    <ContextSelect label="회사 규모" value={context.headcount} options={HEADCOUNTS} onChange={(v) => updateContext('headcount', v)} />
+                    <ContextSelect label="분석 전 내 기울기" value={context.initialLean} options={INITIAL_LEANS} onChange={(v) => updateContext('initialLean', v)} />
+                  </div>
+                  <p className="contextHint">초기 기울기는 AI가 맞춰줘야 할 답이 아니라, 반증할 <b>가설</b>로만 사용합니다.</p>
                 </div>
-                <div className="contextGrid">
-                  <ContextSelect label="결정 유형" value={context.decisionType} options={DECISION_TYPES} onChange={(v) => updateContext('decisionType', v)} />
-                  <ContextSelect label="회사 단계" value={context.stage} options={STAGES} onChange={(v) => updateContext('stage', v)} />
-                  <ContextSelect label="내 직무" value={context.role} options={ROLES} onChange={(v) => updateContext('role', v)} />
-                  <ContextSelect label="회사 규모" value={context.headcount} options={HEADCOUNTS} onChange={(v) => updateContext('headcount', v)} />
-                </div>
-              </div>
+              </details>
 
               <div className="decisionActions">
                 <span>{count}/700 · 회사명·실명·연락처·비공개 숫자 등 민감정보는 입력하지 마세요.</span>
@@ -233,11 +248,39 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="mirrorArt" aria-label="직원과 회사 사이의 정보 비대칭을 상징하는 두 경로">
-            <div className="portal warm"><span>회사가 보여주는 것</span><small>투자 · 직함 · 비전 · 보상</small></div>
-            <div className="mirror"><b>?</b><span>직원이라면<br />무엇을 실사할까?</span></div>
-            <div className="portal cool"><span>내가 확인할 것</span><small>런웨이 · 권한 · 리더 · 옵션</small></div>
-            <div className="person"><i /></div>
+          <div className="productPreview" aria-label="반대편 실제 결과 화면 미리보기">
+            <div className="previewTop">
+              <span>LIVE PRODUCT PREVIEW</span>
+              <i>로그인 없음</i>
+            </div>
+            <div className="previewDecision">
+              <small>예시 결정</small>
+              <b>Series A 스타트업 오퍼, 정말 좋은 선택일까?</b>
+            </div>
+            <div className="previewLenses">
+              {[
+                ['회사 생존 신호', '검증 우선'],
+                ['역할의 실제', '정보 부족'],
+                ['리더·의사결정권', '정보 부족'],
+                ['현금·지분 보상', '검증 우선'],
+                ['학습·다음 선택지', '주의'],
+              ].map(([label, status]) => (
+                <div key={label}><span>{label}</span><strong className={`previewStatus preview-${status.replace(' ', '-')}`}>{status}</strong></div>
+              ))}
+            </div>
+            <div className="previewFlip">
+              <span>FLIP CONDITION</span>
+              <p>런웨이·실제 권한·옵션 조건이 확인되지 않으면 “성장을 위해 가야 한다”는 결론을 다시 봅니다.</p>
+            </div>
+            <div className="previewSprint">
+              <div><b>10분</b><span>질문 3개 선택</span></div>
+              <i>→</i>
+              <div><b>24시간</b><span>실제 답변 확보</span></div>
+              <i>→</i>
+              <div><b>7일</b><span>새 증거로 재실사</span></div>
+            </div>
+            <button onClick={() => analyze(DEMO, true)}>이 결과를 10초 만에 체험하기 →</button>
+            <p className="previewLimit"><b>AI 한계 공개:</b> 반대편은 비공개 런웨이·리더 행동·지분 미래가치를 알 수 없습니다. 모르는 것은 점수로 꾸미지 않고 질문으로 돌려줍니다.</p>
           </div>
         </div>
 
@@ -380,12 +423,31 @@ export default function Home() {
               <div className="reframe"><span>다시 정의한 진짜 질문</span><p>{result.analysis.realQuestion}</p></div>
             </article>
 
+            <div className="relianceGuardrail">
+              <span>AI RELIANCE GUARDRAIL</span>
+              <div><b>추천 점수 없음</b><small>AI가 수락/퇴사를 대신 고르지 않습니다.</small></div>
+              <div><b>확률 꾸미기 없음</b><small>모르는 회사 정보는 “정보 부족”으로 남깁니다.</small></div>
+              <div><b>새 증거로 뒤집기</b><small>실제 답변이 들어오면 분석을 다시 계산합니다.</small></div>
+            </div>
+
             <StartupDiligence
               items={result.analysis.startupDiligence}
               notes={evidenceNotes}
               onNoteChange={updateEvidenceNote}
               onCopyQuestion={copyQuestion}
             />
+
+            <article className="realityCheck">
+              <div className="realityHead">
+                <p className="panelLabel">REALITY CHECK · RESEARCH-INFORMED</p>
+                <h3>좋은 이야기보다, 불편하지만 결정에 필요한 현실을 확인합니다.</h3>
+              </div>
+              <div className="realityGrid">
+                <div><span>01 · NEGATIVE PREVIEW</span><b>실제 힘든 점·퇴사 이유</b><p>{result.analysis.realityCheck.negativePreview}</p><button onClick={() => copyQuestion(result.analysis.realityCheck.negativePreview)}>질문 복사</button></div>
+                <div><span>02 · ALTERNATIVE QUALITY</span><b>대안의 개수가 아니라 질</b><p>{result.analysis.realityCheck.alternativeQuality}</p><button onClick={() => copyQuestion(result.analysis.realityCheck.alternativeQuality)}>질문 복사</button></div>
+                <div><span>03 · PROMISE GAP</span><b>채용·입사 때 약속 vs 현실</b><p>{result.analysis.realityCheck.promiseGap}</p><button onClick={() => copyQuestion(result.analysis.realityCheck.promiseGap)}>질문 복사</button></div>
+              </div>
+            </article>
 
             <article className="evidenceLoop">
               <div className="evidenceLoopCopy">
@@ -483,6 +545,20 @@ export default function Home() {
                   <div><span>STOP RULE</span><p>{result.analysis.decisionCard.stopRule}</p></div>
                 </div>
                 <p className="notice">{result.analysis.riskNotice}</p>
+              </article>
+
+              <article className="calibrationCheck full">
+                <div>
+                  <p className="panelLabel">CALIBRATION CHECK · LOCAL ONLY</p>
+                  <h3>분석 후, 처음 생각은 어떻게 달라졌나요?</h3>
+                  <p>정답을 묻는 게 아닙니다. AI가 내 판단을 얼마나 흔들었는지 스스로 확인하는 단계이며 선택은 서버에 저장하지 않습니다.</p>
+                </div>
+                <div className="calibrationButtons">
+                  {['그대로다', '확신이 약해졌다', '반대쪽으로 바뀌었다', '아직 모르겠다'].map((x) => (
+                    <button key={x} className={reflection === x ? 'active' : ''} onClick={() => setReflection(x)}>{x}</button>
+                  ))}
+                </div>
+                {reflection && <small>현재 기록: <b>{reflection}</b> · 이제 결론을 강화하기보다 남은 미확인 정보를 먼저 줄여보세요.</small>}
               </article>
             </div>
           </div>
