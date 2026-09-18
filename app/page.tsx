@@ -1,6 +1,6 @@
 'use client';
 
-import { FormEvent, useMemo, useRef, useState } from 'react';
+import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 
 type Future = { title: string; description: string; upside: string; downside: string };
 type Premortem = { step: string; earlySignal: string };
@@ -39,12 +39,12 @@ type OntologyNode = {
   type: 'Decision' | 'Dimension' | 'Claim' | 'Evidence' | 'Unknown' | 'Question' | 'FlipCondition' | 'VerificationAction';
   label: string;
   status?: string;
-  provenance: 'user_input' | 'user_verified' | 'model_structured' | 'system_ontology';
+  provenance: 'user_input' | 'user_verified' | 'public_source' | 'model_structured' | 'system_ontology';
   dimension?: string;
 };
 type OntologyEdge = {
   source: string;
-  relation: 'HAS_DIMENSION' | 'HAS_CLAIM' | 'REQUIRES_EVIDENCE' | 'ASKS' | 'VERIFIED_BY' | 'COULD_FLIP' | 'LEADS_TO_ACTION';
+  relation: 'HAS_DIMENSION' | 'HAS_CLAIM' | 'REQUIRES_EVIDENCE' | 'ASKS' | 'VERIFIED_BY' | 'PUBLICLY_SUPPORTED_BY' | 'COULD_FLIP' | 'LEADS_TO_ACTION';
   target: string;
 };
 type DecisionGraph = { ontologyVersion: string; nodes: OntologyNode[]; edges: OntologyEdge[] };
@@ -55,6 +55,33 @@ type ApiResult = {
   ontologyGraph?: DecisionGraph;
   ontologyValidation?: { valid: boolean; violations: string[] };
   ontologyVersion?: string;
+};
+
+type PublicEvidenceResult = {
+  research: {
+    overview: string;
+    signals: {
+      dimension: DiligenceItem['dimension'];
+      finding: string;
+      evidenceLevel: '공개 확인' | '간접 신호' | '확인 안 됨' | '충돌';
+      implication: string;
+      caution: string;
+    }[];
+    questionsToVerify: string[];
+    freshnessNote: string;
+  };
+  sources: { id: string; title: string; url: string }[];
+  searchedAt: string;
+  note: string;
+};
+
+type SavedPassport = {
+  id: string;
+  question: string;
+  context: StartupContext;
+  evidenceNotes: Record<string, string>;
+  savedAt: string;
+  revisitAt: string;
 };
 
 const QUICK_STARTS = [
@@ -111,6 +138,13 @@ export default function Home() {
   const [evidenceNotes, setEvidenceNotes] = useState<Record<string, string>>({});
   const [evidenceLoopMessage, setEvidenceLoopMessage] = useState('');
   const [reflection, setReflection] = useState('');
+  const [publicCompany, setPublicCompany] = useState('');
+  const [publicWebsite, setPublicWebsite] = useState('');
+  const [publicResearch, setPublicResearch] = useState<PublicEvidenceResult | null>(null);
+  const [publicLoading, setPublicLoading] = useState(false);
+  const [publicError, setPublicError] = useState('');
+  const [passport, setPassport] = useState<SavedPassport | null>(null);
+  const [passportMessage, setPassportMessage] = useState('');
   const resultsRef = useRef<HTMLElement | null>(null);
   const count = useMemo(() => question.length, [question]);
   const evidenceCount = useMemo(
@@ -118,7 +152,28 @@ export default function Home() {
     [evidenceNotes],
   );
 
-  async function analyze(value?: string, demo = false, verifiedEvidence: string[] = []) {
+  useEffect(() => {
+    try {
+      const raw = window.localStorage.getItem('bandaepyeon:passport');
+      if (raw) setPassport(JSON.parse(raw) as SavedPassport);
+    } catch {
+      // local-only convenience; ignore corrupted storage
+    }
+  }, []);
+
+  function publicEvidencePayload(source = publicResearch): string[] {
+    if (!source) return [];
+    return source.research.signals
+      .filter((x) => x.evidenceLevel !== '확인 안 됨')
+      .map((x) => `${x.dimension}: ${x.finding} [${x.evidenceLevel}] · 주의: ${x.caution}`);
+  }
+
+  async function analyze(
+    value?: string,
+    demo = false,
+    verifiedEvidence: string[] = [],
+    publicEvidence: string[] = [],
+  ) {
     const q = (value ?? question).trim();
     setError('');
     if (!demo && q.length < 8) {
@@ -144,7 +199,7 @@ export default function Home() {
       const res = await fetch('/api/analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ question: q || DEMO, demo, context: normalizedContext, verifiedEvidence }),
+        body: JSON.stringify({ question: q || DEMO, demo, context: normalizedContext, verifiedEvidence, publicEvidence }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || '분석에 실패했습니다.');
@@ -188,6 +243,77 @@ export default function Home() {
   async function copyQuestion(text: string) {
     await navigator.clipboard.writeText(text);
     setEvidenceLoopMessage('질문을 복사했습니다. 실제 담당자·리더·현직자에게 확인해보세요.');
+  }
+
+  async function researchPublicEvidence() {
+    setPublicError('');
+    if (publicCompany.trim().length < 2) {
+      setPublicError('공개 검색할 회사명을 입력해주세요.');
+      return;
+    }
+
+    setPublicLoading(true);
+    try {
+      const res = await fetch('/api/public-evidence', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          company: publicCompany.trim(),
+          website: publicWebsite.trim(),
+          role: context.role !== '선택 안 함' ? context.role : '',
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || '공개 자료 검색에 실패했습니다.');
+      setPublicResearch(data);
+    } catch (e) {
+      setPublicError(e instanceof Error ? e.message : '공개 자료 검색을 완료하지 못했습니다.');
+    } finally {
+      setPublicLoading(false);
+    }
+  }
+
+  async function applyPublicEvidence() {
+    const evidence = publicEvidencePayload();
+    if (evidence.length === 0) {
+      setPublicError('재실사에 반영할 공개 신호가 아직 없습니다.');
+      return;
+    }
+    await analyze(question, false, [], evidence);
+  }
+
+  function savePassport() {
+    const saved: SavedPassport = {
+      id: typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : String(Date.now()),
+      question,
+      context,
+      evidenceNotes,
+      savedAt: new Date().toISOString(),
+      revisitAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+    };
+    try {
+      window.localStorage.setItem('bandaepyeon:passport', JSON.stringify(saved));
+      setPassport(saved);
+      setPassportMessage('이 결정은 서버가 아니라 이 브라우저에만 저장했습니다. 7일 안에 다시 열어 증거를 이어서 확인하세요.');
+    } catch {
+      setPassportMessage('브라우저 저장을 사용할 수 없습니다.');
+    }
+  }
+
+  function restorePassport() {
+    if (!passport) return;
+    setQuestion(passport.question);
+    setContext(passport.context);
+    setEvidenceNotes(passport.evidenceNotes || {});
+    setPassportMessage('저장한 결정을 불러왔습니다. 새 증거를 추가하거나 다시 실사하세요.');
+    document.getElementById('decision-input')?.focus();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function deletePassport() {
+    window.localStorage.removeItem('bandaepyeon:passport');
+    setPassport(null);
+    setPassportMessage('이 기기에 저장한 결정을 삭제했습니다.');
   }
 
   async function copySummary() {
@@ -244,6 +370,19 @@ export default function Home() {
             <p className="eyebrow">EMPLOYEE-SIDE STARTUP DUE DILIGENCE</p>
             <h1>입사·잔류·이직 전에,<br /><em>회사보다 내 결정을 먼저 실사하세요.</em></h1>
             <p className="lead">스타트업은 정보가 부족한데 결정은 빠릅니다. 반대편은 회사·역할·리더·보상·학습의 다섯 영역에서 아직 증명되지 않은 것을 찾아 직원 편에서 결정을 검증합니다.</p>
+
+            {passport && (
+              <div className="passportResume">
+                <div>
+                  <span>LOCAL DECISION PASSPORT</span>
+                  <b>{passport.question}</b>
+                  <small>7일 재점검 · {new Date(passport.revisitAt).toLocaleDateString('ko-KR')}</small>
+                </div>
+                <button onClick={restorePassport}>이어 실사 →</button>
+                <button className="passportDelete" onClick={deletePassport}>삭제</button>
+              </div>
+            )}
+            {passportMessage && <p className="passportMessage">{passportMessage}</p>}
 
             <div className="activationRail" aria-label="반대편 이용 순서">
               <div><i>1</i><span><b>고민 한 문장</b><small>회사명 없이 익명으로</small></span></div>
@@ -495,6 +634,19 @@ export default function Home() {
               onCopyQuestion={copyQuestion}
             />
 
+            <PublicEvidenceLab
+              company={publicCompany}
+              website={publicWebsite}
+              loading={publicLoading}
+              error={publicError}
+              result={publicResearch}
+              onCompanyChange={setPublicCompany}
+              onWebsiteChange={setPublicWebsite}
+              onSearch={researchPublicEvidence}
+              onApply={applyPublicEvidence}
+              onCopyQuestion={copyQuestion}
+            />
+
             <article className="realityCheck">
               <div className="realityHead">
                 <p className="panelLabel">REALITY CHECK · RESEARCH-INFORMED</p>
@@ -605,6 +757,10 @@ export default function Home() {
                   <div><span>STOP RULE</span><p>{result.analysis.decisionCard.stopRule}</p></div>
                 </div>
                 <p className="notice">{result.analysis.riskNotice}</p>
+                <div className="passportAction">
+                  <div><b>7일 뒤 이 결정을 다시 보세요.</b><span>로그인 없이, 이 기기에만 질문·컨텍스트·증거 메모를 저장합니다.</span></div>
+                  <button onClick={savePassport}>이 기기에 Decision Passport 저장</button>
+                </div>
               </article>
 
               <article className="calibrationCheck full">
@@ -672,10 +828,92 @@ export default function Home() {
   );
 }
 
+function PublicEvidenceLab({
+  company,
+  website,
+  loading,
+  error,
+  result,
+  onCompanyChange,
+  onWebsiteChange,
+  onSearch,
+  onApply,
+  onCopyQuestion,
+}: {
+  company: string;
+  website: string;
+  loading: boolean;
+  error: string;
+  result: PublicEvidenceResult | null;
+  onCompanyChange: (value: string) => void;
+  onWebsiteChange: (value: string) => void;
+  onSearch: () => void;
+  onApply: () => void;
+  onCopyQuestion: (text: string) => void;
+}) {
+  return (
+    <details className="publicEvidenceLab">
+      <summary>
+        <span><b>Public Evidence Agent</b><small>선택 · 최신 공개 웹 자료로 회사 신호 확인</small></span>
+        <em>공개 자료까지 실사하기 +</em>
+      </summary>
+      <div className="publicEvidenceBody">
+        <div className="publicSearchForm">
+          <label>
+            <span>공개 회사명</span>
+            <input value={company} onChange={(e) => onCompanyChange(e.target.value)} placeholder="예: 공개적으로 검색 가능한 회사명" />
+          </label>
+          <label>
+            <span>공식 웹사이트 / 채용페이지 URL · 선택</span>
+            <input value={website} onChange={(e) => onWebsiteChange(e.target.value)} placeholder="https://..." />
+          </label>
+          <button onClick={onSearch} disabled={loading}>{loading ? '최신 공개 자료 검색 중…' : '공개 자료 실사 →'}</button>
+        </div>
+        <p className="publicPrivacy">회사명은 최신 공개 자료 검색을 위해 검색·AI 제공 경로로 전달됩니다. 비공개 매출·런웨이·계약·고객정보는 입력하지 마세요.</p>
+        {error && <p className="publicError">{error}</p>}
+
+        {result && (
+          <div className="publicResearchResult">
+            <div className="publicOverview">
+              <span>PUBLIC EVIDENCE SUMMARY</span>
+              <p>{result.research.overview}</p>
+              <small>{result.research.freshnessNote}</small>
+            </div>
+            <div className="publicSignalGrid">
+              {result.research.signals.map((x, i) => (
+                <article key={`${x.dimension}-${i}`}>
+                  <div><b>{x.dimension}</b><span className={`publicLevel level-${x.evidenceLevel.replaceAll(' ', '-')}`}>{x.evidenceLevel}</span></div>
+                  <p>{x.finding}</p>
+                  <small><b>의미</b> {x.implication}</small>
+                  <small><b>주의</b> {x.caution}</small>
+                </article>
+              ))}
+            </div>
+            <div className="publicQuestions">
+              <b>공개 자료로도 남은 질문</b>
+              {result.research.questionsToVerify.map((q, i) => (
+                <div key={i}><span>{i + 1}</span><p>{q}</p><button onClick={() => onCopyQuestion(q)}>복사</button></div>
+              ))}
+            </div>
+            <div className="publicSources">
+              <b>검색 출처</b>
+              {result.sources.length > 0 ? result.sources.map((s) => (
+                <a key={s.url} href={s.url} target="_blank" rel="noreferrer">{s.title} ↗</a>
+              )) : <span>검색 도구가 별도 URL 출처를 반환하지 않았습니다.</span>}
+            </div>
+            <button className="applyPublicEvidence" onClick={onApply}>이 공개 신호를 ontology에 반영해 재실사 →</button>
+            <p className="publicNote">{result.note}</p>
+          </div>
+        )}
+      </div>
+    </details>
+  );
+}
+
 function OntologyMap({ graph, validation }: { graph: DecisionGraph; validation?: { valid: boolean; violations: string[] } }) {
   const nodeById = new Map(graph.nodes.map((n) => [n.id, n]));
   const relationRows = graph.edges
-    .filter((e) => ['REQUIRES_EVIDENCE', 'VERIFIED_BY', 'COULD_FLIP', 'LEADS_TO_ACTION'].includes(e.relation))
+    .filter((e) => ['REQUIRES_EVIDENCE', 'VERIFIED_BY', 'PUBLICLY_SUPPORTED_BY', 'COULD_FLIP', 'LEADS_TO_ACTION'].includes(e.relation))
     .slice(0, 12);
   const counts = {
     dimensions: graph.nodes.filter((n) => n.type === 'Dimension').length,
@@ -690,6 +928,7 @@ function OntologyMap({ graph, validation }: { graph: DecisionGraph; validation?:
     REQUIRES_EVIDENCE: 'NEEDS',
     ASKS: 'ASKS',
     VERIFIED_BY: 'VERIFIED BY',
+    PUBLICLY_SUPPORTED_BY: 'PUBLIC SOURCE',
     COULD_FLIP: 'COULD FLIP',
     LEADS_TO_ACTION: 'LEADS TO',
   };
@@ -730,6 +969,7 @@ function OntologyMap({ graph, validation }: { graph: DecisionGraph; validation?:
         <div className="ontologyLegend">
           <span><i className="onto-user_input" />사용자 입력</span>
           <span><i className="onto-user_verified" />사용자가 확인한 증거</span>
+          <span><i className="onto-public_source" />공개 웹 자료</span>
           <span><i className="onto-model_structured" />AI 구조화</span>
           <span><i className="onto-system_ontology" />시스템 온톨로지</span>
         </div>
