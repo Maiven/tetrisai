@@ -184,7 +184,7 @@ export default function Home() {
     const activeContext = demo ? DEMO_CONTEXT : context;
     if (demo) setContext(DEMO_CONTEXT);
     setQuestion(q || DEMO);
-    if (verifiedEvidence.length === 0) {
+    if (verifiedEvidence.length === 0 && publicEvidence.length === 0) {
       setReflection('');
       setEvidenceNotes({});
       setEvidenceLoopMessage('');
@@ -237,7 +237,7 @@ export default function Home() {
     }
 
     setEvidenceLoopMessage(`새 증거 ${verifiedEvidence.length}개를 반영해 다시 실사합니다.`);
-    await analyze(question, false, verifiedEvidence);
+    await analyze(question, false, verifiedEvidence, publicEvidencePayload());
   }
 
   async function copyQuestion(text: string) {
@@ -620,6 +620,8 @@ export default function Home() {
               <div><span>STOP RULE</span><b>{result.analysis.decisionCard.stopRule}</b></div>
             </div>
 
+            {result.ontologyGraph && <EvidenceCoverage graph={result.ontologyGraph} />}
+
             <div className="relianceGuardrail">
               <span>AI RELIANCE GUARDRAIL</span>
               <div><b>추천 점수 없음</b><small>AI가 수락/퇴사를 대신 고르지 않습니다.</small></div>
@@ -825,6 +827,36 @@ export default function Home() {
 
       {loading && <div className="loading"><div><span className="spinner" /><h3>직원 편에서 회사를 실사하고 있습니다.</h3><p>회사 → 역할 → 리더 → 보상 → 학습 → 반증 조건</p><small>AI가 퇴사·입사를 대신 결정하지 않습니다.</small></div></div>}
     </main>
+  );
+}
+
+function EvidenceCoverage({ graph }: { graph: DecisionGraph }) {
+  const verifiedDimensions = new Set(
+    graph.edges
+      .filter((e) => e.relation === 'VERIFIED_BY')
+      .map((e) => e.source),
+  );
+  const publicDimensions = new Set(
+    graph.edges
+      .filter((e) => e.relation === 'PUBLICLY_SUPPORTED_BY')
+      .map((e) => e.source),
+  );
+  const unknownClaims = graph.nodes.filter((n) => n.type === 'Unknown').length;
+  const totalDimensions = graph.nodes.filter((n) => n.type === 'Dimension').length || 5;
+
+  return (
+    <article className="evidenceCoverage">
+      <div>
+        <p className="panelLabel">EVIDENCE CLOSURE · NOT AN AI SCORE</p>
+        <h3>좋은 결정의 진척도를 “확신”이 아니라 확보한 증거로 봅니다.</h3>
+      </div>
+      <div className="coverageMetrics">
+        <div><strong>{verifiedDimensions.size}<span>/ {totalDimensions}</span></strong><small>직접 확인된 Lens</small></div>
+        <div><strong>{publicDimensions.size}<span>/ {totalDimensions}</span></strong><small>공개 자료가 있는 Lens</small></div>
+        <div><strong>{unknownClaims}</strong><small>아직 미확인 Claim</small></div>
+      </div>
+      <p>목표는 5/5 점수를 만드는 것이 아닙니다. <b>결론을 바꿀 수 있는 핵심 미확인 정보부터 닫는 것</b>입니다.</p>
+    </article>
   );
 }
 
