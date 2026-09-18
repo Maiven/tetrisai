@@ -66,10 +66,16 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [copied, setCopied] = useState(false);
+  const [evidenceNotes, setEvidenceNotes] = useState<Record<string, string>>({});
+  const [evidenceLoopMessage, setEvidenceLoopMessage] = useState('');
   const resultsRef = useRef<HTMLElement | null>(null);
   const count = useMemo(() => question.length, [question]);
+  const evidenceCount = useMemo(
+    () => Object.values(evidenceNotes).filter((x) => x.trim().length > 0).length,
+    [evidenceNotes],
+  );
 
-  async function analyze(value?: string, demo = false) {
+  async function analyze(value?: string, demo = false, verifiedEvidence: string[] = []) {
     const q = (value ?? question).trim();
     setError('');
     if (!demo && q.length < 8) {
@@ -80,6 +86,10 @@ export default function Home() {
     const activeContext = demo ? DEMO_CONTEXT : context;
     if (demo) setContext(DEMO_CONTEXT);
     setQuestion(q || DEMO);
+    if (verifiedEvidence.length === 0) {
+      setEvidenceNotes({});
+      setEvidenceLoopMessage('');
+    }
     setLoading(true);
 
     try {
@@ -90,7 +100,7 @@ export default function Home() {
       const res = await fetch('/api/analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ question: q || DEMO, demo, context: normalizedContext }),
+        body: JSON.stringify({ question: q || DEMO, demo, context: normalizedContext, verifiedEvidence }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || '분석에 실패했습니다.');
@@ -110,6 +120,30 @@ export default function Home() {
 
   function updateContext(key: keyof StartupContext, value: string) {
     setContext((prev) => ({ ...prev, [key]: value }));
+  }
+
+  function updateEvidenceNote(dimension: string, value: string) {
+    setEvidenceNotes((prev) => ({ ...prev, [dimension]: value.slice(0, 300) }));
+    setEvidenceLoopMessage('');
+  }
+
+  async function reanalyzeWithEvidence() {
+    const verifiedEvidence = Object.entries(evidenceNotes)
+      .filter(([, value]) => value.trim())
+      .map(([dimension, value]) => `${dimension}: ${value.trim()}`);
+
+    if (verifiedEvidence.length === 0) {
+      setEvidenceLoopMessage('먼저 5-Lens 중 하나 이상에 새로 확인한 내용을 적어주세요.');
+      return;
+    }
+
+    setEvidenceLoopMessage(`새 증거 ${verifiedEvidence.length}개를 반영해 다시 실사합니다.`);
+    await analyze(question, false, verifiedEvidence);
+  }
+
+  async function copyQuestion(text: string) {
+    await navigator.clipboard.writeText(text);
+    setEvidenceLoopMessage('질문을 복사했습니다. 실제 담당자·리더·현직자에게 확인해보세요.');
   }
 
   async function copySummary() {
@@ -316,7 +350,28 @@ export default function Home() {
               <div className="reframe"><span>다시 정의한 진짜 질문</span><p>{result.analysis.realQuestion}</p></div>
             </article>
 
-            <StartupDiligence items={result.analysis.startupDiligence} />
+            <StartupDiligence
+              items={result.analysis.startupDiligence}
+              notes={evidenceNotes}
+              onNoteChange={updateEvidenceNote}
+              onCopyQuestion={copyQuestion}
+            />
+
+            <article className="evidenceLoop">
+              <div className="evidenceLoopCopy">
+                <p className="panelLabel">EVIDENCE LOOP · CLOSED LOOP</p>
+                <h3>실제로 확인한 답을 다시 넣으면, AI가 판단 구조를 업데이트합니다.</h3>
+                <p>비공개 숫자·회사명·계약 원문은 적지 말고 “구체적 답변을 받음 / 답변이 모호함 / 권한이 기대보다 좁음”처럼 익명화한 요지만 입력하세요.</p>
+              </div>
+              <div className="evidenceProgress">
+                <div><strong>{evidenceCount}</strong><span>/ 5 Lenses</span></div>
+                <small>새로 확보한 증거</small>
+              </div>
+              <button disabled={loading || evidenceCount === 0} onClick={reanalyzeWithEvidence}>
+                {loading ? '재실사 중…' : '새 증거로 다시 실사 →'}
+              </button>
+              {evidenceLoopMessage && <p className="evidenceLoopMessage">{evidenceLoopMessage}</p>}
+            </article>
 
             <article className="verificationSprint">
               <div className="sprintHead">
@@ -447,7 +502,17 @@ function EvidenceLedger({ items }: { items: EvidenceItem[] }) {
   );
 }
 
-function StartupDiligence({ items }: { items: DiligenceItem[] }) {
+function StartupDiligence({
+  items,
+  notes,
+  onNoteChange,
+  onCopyQuestion,
+}: {
+  items: DiligenceItem[];
+  notes: Record<string, string>;
+  onNoteChange: (dimension: string, value: string) => void;
+  onCopyQuestion: (text: string) => void;
+}) {
   return (
     <article className="startupDiligence">
       <div className="diligenceHead">
@@ -460,7 +525,20 @@ function StartupDiligence({ items }: { items: DiligenceItem[] }) {
             <div className="diligenceTop"><i>{String(i + 1).padStart(2, '0')}</i><b>{x.dimension}</b><span className={`dueStatus due-${x.status.replace(' ', '-')}`}>{x.status}</span></div>
             <p>{x.signal}</p>
             <div className="missing"><small>아직 필요한 증거</small><span>{x.missingEvidence}</span></div>
-            <div className="ask"><small>직접 물어볼 질문</small><strong>{x.questionToAsk}</strong></div>
+            <div className="ask">
+              <small>직접 물어볼 질문</small>
+              <strong>{x.questionToAsk}</strong>
+              <button onClick={() => onCopyQuestion(x.questionToAsk)}>질문 복사</button>
+            </div>
+            <label className="evidenceNote">
+              <small>확인 후, 익명화한 답의 요지만 기록</small>
+              <textarea
+                maxLength={300}
+                value={notes[x.dimension] ?? ''}
+                onChange={(e) => onNoteChange(x.dimension, e.target.value)}
+                placeholder="예: 구체적 사례를 들었음 / 답변이 계속 모호함 · 회사명·비공개 숫자 입력 금지"
+              />
+            </label>
           </section>
         ))}
       </div>
