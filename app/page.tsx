@@ -4,20 +4,26 @@ import { FormEvent, useMemo, useRef, useState } from 'react';
 
 type Future = { title: string; description: string; upside: string; downside: string };
 type Premortem = { step: string; earlySignal: string };
+type EvidenceItem = { claim: string; status: '사실' | '가정' | '미확인'; why: string };
 type Analysis = {
   reframedDecision: string;
   realQuestion: string;
   assumptions: string[];
   counterarguments: string[];
   blindSpots: string[];
+  evidenceLedger: EvidenceItem[];
+  flipConditions: string[];
+  reversibility: { level: '높음' | '중간' | '낮음'; explanation: string; costToReverse: string };
+  decisionTension: { actTooSoon: string; waitTooLong: string };
   futures: Future[];
   premortem: Premortem[];
   evidenceToCheck: string[];
   reversibleExperiment: string;
   decisionRule: string;
+  decisionCard: { oneSentence: string; nextCheck: string; stopRule: string };
   riskNotice: string;
 };
-type ApiResult = { mode: 'ai' | 'fallback'; model: string; analysis: Analysis };
+type ApiResult = { mode: 'ai' | 'fallback' | 'demo'; model: string; analysis: Analysis };
 
 const EXAMPLES = [
   '연봉이 높은 스타트업으로 이직할까?',
@@ -32,23 +38,24 @@ export default function Home() {
   const [result, setResult] = useState<ApiResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [copied, setCopied] = useState(false);
   const resultsRef = useRef<HTMLElement | null>(null);
   const count = useMemo(() => question.length, [question]);
 
-  async function analyze(value?: string) {
+  async function analyze(value?: string, demo = false) {
     const q = (value ?? question).trim();
     setError('');
-    if (q.length < 8) {
+    if (!demo && q.length < 8) {
       setError('조금 더 구체적으로 적어주세요. 8자 이상이면 좋습니다.');
       return;
     }
-    setQuestion(q);
+    setQuestion(q || DEMO);
     setLoading(true);
     try {
       const res = await fetch('/api/analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ question: q }),
+        body: JSON.stringify({ question: q || DEMO, demo }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || '분석에 실패했습니다.');
@@ -66,26 +73,48 @@ export default function Home() {
     analyze();
   }
 
+  async function copySummary() {
+    if (!result) return;
+    const a = result.analysis;
+    const summary = [
+      '반대편 · 결정 검증 카드',
+      '',
+      `결정: ${question}`,
+      `진짜 질문: ${a.realQuestion}`,
+      '',
+      '결론을 뒤집을 조건',
+      ...a.flipConditions.map((x, i) => `${i + 1}. ${x}`),
+      '',
+      `가장 작은 검증: ${a.reversibleExperiment}`,
+      `중단 조건: ${a.decisionCard.stopRule}`,
+      '',
+      'https://decision-mirror-eight.vercel.app',
+    ].join('\n');
+    await navigator.clipboard.writeText(summary);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1600);
+  }
+
   return (
     <main>
       <section className="hero" id="top">
         <nav>
           <a href="#top" className="brand" aria-label="반대편 홈">
             <span className="mark"><i /><i /></span>
-            <span><strong>반대편</strong><small>Decision Mirror</small></span>
+            <span><strong>반대편</strong><small>Falsify Before You Decide</small></span>
           </a>
           <div className="navlinks">
-            <a href="#why">왜 반대편인가</a>
-            <a href="#how">작동 방식</a>
-            <button onClick={() => document.getElementById('decision-input')?.focus()}>지금 고민해보기 ↗</button>
+            <a href="#why">왜 필요한가</a>
+            <a href="#how">검증 프로토콜</a>
+            <button onClick={() => document.getElementById('decision-input')?.focus()}>내 결정 검증하기 ↗</button>
           </div>
         </nav>
 
         <div className="heroGrid">
           <div className="copy">
-            <p className="eyebrow">AI DECISION RED TEAM</p>
-            <h1>당신의 결정에는<br />아직 보지 못한 <em>반대편</em>이 있다.</h1>
-            <p className="lead">AI가 답을 대신 정하지 않습니다. 당신의 생각을 반박하고, 숨은 가정과 실패 경로를 찾아 더 넓게 판단하도록 돕습니다.</p>
+            <p className="eyebrow">AI DECISION FALSIFIER</p>
+            <h1>결론이 맞다는 이유보다,<br /><em>틀렸다는 증거</em>부터 찾습니다.</h1>
+            <p className="lead">반대편은 답을 대신 고르는 AI가 아닙니다. 사실·가정·미확인을 분리하고, 당신의 결론을 뒤집을 조건과 실패 신호를 찾아 결정 전에 검증하게 합니다.</p>
 
             <form className="decisionBox" onSubmit={submit}>
               <label htmlFor="decision-input">지금 고민하고 있는 결정을 한 문장으로 적어보세요.</label>
@@ -97,55 +126,64 @@ export default function Home() {
                 placeholder="예: 안정적인 회사를 떠나 성장 가능성이 높은 스타트업으로 이직할까?"
               />
               <div className="decisionActions">
-                <span>{count}/700 · 개인정보·회사 비밀정보는 입력하지 마세요.</span>
-                <button type="submit" disabled={loading}>{loading ? '분석 중…' : '반대편 보기 →'}</button>
+                <span>{count}/700 · 이름, 연락처, 회사 비밀정보 등 민감정보는 입력하지 마세요.</span>
+                <button type="submit" disabled={loading}>{loading ? '검증 중…' : '내 결론 공격하기 →'}</button>
               </div>
               {error && <p className="error">{error}</p>}
             </form>
 
             <div className="examples">
-              <span>예시</span>
+              <span>바로 체험</span>
               {EXAMPLES.map((x) => <button key={x} onClick={() => analyze(x)}>{x}</button>)}
-              <button className="demo" onClick={() => analyze(DEMO)}>▶ 로그인 없이 10초 데모</button>
+              <button className="demo" onClick={() => analyze(DEMO, true)}>▶ 로그인 없이 10초 데모</button>
             </div>
           </div>
 
-          <div className="mirrorArt" aria-label="보이는 가능성과 보이지 않는 위험을 상징하는 두 개의 문">
-            <div className="portal warm"><span>보이는 가능성</span><small>내가 기대하는 미래</small></div>
-            <div className="mirror"><b>?</b><span>결정하기 전,<br />한 번 더 바라보세요.</span></div>
-            <div className="portal cool"><span>보이지 않는 리스크</span><small>내가 놓친 반대편</small></div>
+          <div className="mirrorArt" aria-label="확신과 반증 가능성을 상징하는 두 개의 경로">
+            <div className="portal warm"><span>내가 믿는 결론</span><small>지금 보이는 이유</small></div>
+            <div className="mirror"><b>?</b><span>무엇이 나오면<br />생각을 바꿀까?</span></div>
+            <div className="portal cool"><span>결론을 깨는 증거</span><small>아직 확인하지 않은 것</small></div>
             <div className="person"><i /></div>
           </div>
         </div>
 
         <div className="trustline">
-          <span>◉ 결론을 강요하지 않음</span>
-          <span>◐ 숨은 가정과 반대 논리 탐색</span>
-          <span>◎ 로그인·회원가입 없이 바로 체험</span>
+          <span>◉ 로그인·회원가입 없이 바로 체험</span>
+          <span>◐ 사실 · 가정 · 미확인 분리</span>
+          <span>◎ AI 장애 시에도 데모·Fallback 유지</span>
         </div>
       </section>
 
       <section className="why section" id="why">
-        <p className="eyebrow">THE PROBLEM</p>
-        <h2>AI가 똑똑해질수록,<br />우리는 더 쉽게 확신할 수 있습니다.</h2>
-        <p className="sectionLead">대부분의 AI는 사용자의 질문에 답합니다. 반대편은 질문 뒤에 숨어 있는 가정부터 의심합니다. 목표는 ‘정답 생성’이 아니라 ‘판단 오류의 조기 발견’입니다.</p>
+        <p className="eyebrow">THE REAL PROBLEM</p>
+        <h2>AI가 말을 잘할수록,<br />그럴듯한 확신도 더 쉽게 만들어집니다.</h2>
+        <p className="sectionLead">중요한 결정에서 필요한 것은 또 하나의 추천이 아니라, 지금 믿고 있는 결론이 어디서 무너질 수 있는지를 먼저 보는 일입니다. 반대편은 ‘찬반 정리’가 아니라 <b>결론을 반증 가능한 상태로 바꾸는 것</b>을 제품의 핵심으로 둡니다.</p>
         <div className="compare">
-          <article><b>일반적인 생성형 AI</b><p>질문 → 장단점 → 추천 답변</p><strong>“무엇을 선택할까요?”</strong></article>
-          <article className="accent"><b>반대편 · Decision Mirror</b><p>결정 → 가정 → 반박 → 실패경로 → 검증</p><strong>“무엇을 더 확인해야 할까요?”</strong></article>
+          <article><b>일반적인 생성형 AI</b><p>질문 → 장단점 → 매끄러운 추천</p><strong>“그래서 무엇을 할까요?”</strong></article>
+          <article className="accent"><b>반대편</b><p>결정 → 증거 분리 → 반증 → 실패 신호 → 작은 실험</p><strong>“무엇이 나오면 생각을 바꿀까요?”</strong></article>
         </div>
       </section>
 
       <section className="how section" id="how">
-        <p className="eyebrow">HOW IT WORKS</p>
-        <h2>하나의 결정을 다섯 각도에서 공격합니다.</h2>
-        <div className="steps">
+        <p className="eyebrow">FALSIFICATION PROTOCOL</p>
+        <h2>확신을 키우기 전에,<br />결론을 여섯 번 검증합니다.</h2>
+        <div className="steps six">
           {[
-            ['01', 'Decision Reframe', '겉으로 보이는 선택을 실제 의사결정 문제로 다시 정의합니다.'],
-            ['02', 'Assumption Mining', '사용자가 사실처럼 믿고 있는 숨은 가정을 추출합니다.'],
-            ['03', 'Counter Agent', '내 결론과 반대되는 논리와 놓친 위험을 의도적으로 만듭니다.'],
-            ['04', 'Pre-mortem', '실패했다고 가정한 뒤 원인과 조기 경보 신호를 거꾸로 찾습니다.'],
-            ['05', 'Smallest Test', '결정을 확정하기 전에 가장 값싸고 되돌릴 수 있는 실험을 제안합니다.'],
+            ['01', 'Decision Reframe', '겉으로 보이는 선택을 실제로 감당해야 할 의사결정 문제로 다시 정의합니다.'],
+            ['02', 'Evidence Ledger', '사용자 문장을 사실·가정·미확인으로 분리해 무엇을 실제로 아는지 보여줍니다.'],
+            ['03', 'Counter Case', '현재 결론을 가장 강하게 반박할 수 있는 논리와 사각지대를 만듭니다.'],
+            ['04', 'Flip Condition', '어떤 새로운 사실이 나오면 생각을 바꿔야 하는지 미리 정합니다.'],
+            ['05', 'Pre-mortem', '이미 실패했다고 가정하고 원인과 조기 경보 신호를 거꾸로 찾습니다.'],
+            ['06', 'Smallest Test', '큰 결정을 내리기 전에 가장 싸고 되돌릴 수 있는 검증 행동을 설계합니다.'],
           ].map(([n,t,d]) => <article key={n}><span>{n}</span><h3>{t}</h3><p>{d}</p></article>)}
+        </div>
+        <div className="researchNote">
+          <div><b>Research-grounded</b><span>Pre-mortem · Prospective hindsight</span></div>
+          <p>실패를 미리 가정하고 원인을 역추적하는 pre-mortem과 prospective hindsight 연구에서 출발하되, 반대편은 이를 개인의 실제 결정에 맞는 검증 프로토콜로 재구성했습니다.</p>
+          <div className="sourceLinks">
+            <a href="https://hbr.org/2007/09/performing-a-project-premortem" target="_blank" rel="noreferrer">Gary Klein · HBR ↗</a>
+            <a href="https://onlinelibrary.wiley.com/doi/10.1002/bdm.3960020103" target="_blank" rel="noreferrer">Mitchell, Russo & Pennington · JBDM ↗</a>
+          </div>
         </div>
       </section>
 
@@ -154,22 +192,52 @@ export default function Home() {
           <div className="resultsInner">
             <header className="resultHeader">
               <div>
-                <span className={`mode ${result.mode}`}>{result.mode === 'ai' ? 'LIVE AI ANALYSIS' : 'SAFE FALLBACK MODE'}</span>
-                <h2>당신의 결정, 반대편에서 다시 봤습니다.</h2>
+                <span className={`mode ${result.mode}`}>
+                  {result.mode === 'ai' ? 'LIVE AI FALSIFICATION' : result.mode === 'demo' ? '10-SECOND DEMO' : 'SAFE FALLBACK MODE'}
+                </span>
+                <h2>확신이 아니라, 검증 가능한 결정으로 바꿨습니다.</h2>
                 <p>{result.model}</p>
               </div>
-              <button onClick={() => { setResult(null); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>새 결정 분석</button>
+              <div className="headerActions">
+                <button onClick={copySummary}>{copied ? '복사 완료 ✓' : '결정 카드 복사'}</button>
+                <button onClick={() => { setResult(null); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>새 결정 분석</button>
+              </div>
             </header>
 
             <article className="heroResult">
               <small>당신이 적은 결정</small>
               <h3>{question}</h3>
-              <div className="reframe"><span>AI가 다시 정의한 진짜 질문</span><p>{result.analysis.realQuestion}</p></div>
+              <div className="reframe"><span>다시 정의한 진짜 질문</span><p>{result.analysis.realQuestion}</p></div>
             </article>
 
             <div className="resultGrid">
+              <EvidenceLedger items={result.analysis.evidenceLedger} />
+
+              <article className="panel flipPanel">
+                <p className="panelLabel">FLIP CONDITION</p>
+                <h3>이 사실이 나오면, 생각을 바꾸세요.</h3>
+                <p className="microcopy">좋은 판단은 확신이 강한 판단이 아니라, 무엇이 나오면 틀렸다고 인정할지 미리 정한 판단입니다.</p>
+                <ul>{result.analysis.flipConditions.map((x,i)=><li key={i}><span>{String(i+1).padStart(2,'0')}</span>{x}</li>)}</ul>
+              </article>
+
+              <ResultList label="COUNTER CASE" title="현재 결론을 가장 강하게 반박하면" items={result.analysis.counterarguments} tone="red" />
               <ResultList label="ASSUMPTION MINING" title="당연하다고 믿고 있는 것" items={result.analysis.assumptions} />
-              <ResultList label="COUNTER AGENT" title="당신의 판단을 반박합니다" items={result.analysis.counterarguments} tone="red" />
+
+              <article className="panel">
+                <p className="panelLabel">REVERSIBILITY</p>
+                <h3>이 결정은 얼마나 되돌릴 수 있을까?</h3>
+                <div className="reversibility">
+                  <strong className={`rev rev-${result.analysis.reversibility.level}`}>{result.analysis.reversibility.level}</strong>
+                  <p>{result.analysis.reversibility.explanation}</p>
+                </div>
+                <div className="costBox"><b>되돌리는 비용</b><span>{result.analysis.reversibility.costToReverse}</span></div>
+              </article>
+
+              <article className="panel">
+                <p className="panelLabel">TIMING TENSION</p>
+                <h3>너무 빨라도, 너무 늦어도 비용이 생깁니다.</h3>
+                <div className="tension"><div><b>너무 빨리 결정하면</b><p>{result.analysis.decisionTension.actTooSoon}</p></div><div><b>너무 오래 기다리면</b><p>{result.analysis.decisionTension.waitTooLong}</p></div></div>
+              </article>
 
               <article className="panel full">
                 <p className="panelLabel">BLIND SPOTS</p><h3>지금 시야 밖에 있는 변수</h3>
@@ -177,7 +245,7 @@ export default function Home() {
               </article>
 
               <article className="panel full">
-                <p className="panelLabel">POSSIBLE FUTURES</p><h3>하나의 미래 대신 세 개의 경로</h3>
+                <p className="panelLabel">POSSIBLE PATHS · NOT PREDICTIONS</p><h3>미래를 예언하지 않고, 세 개의 경로를 비교합니다.</h3>
                 <div className="futureGrid">{result.analysis.futures.map((f,i)=><div className="future" key={i}><b>{String(i+1).padStart(2,'0')} · {f.title}</b><p>{f.description}</p><div className="up">＋ {f.upside}</div><div className="down">− {f.downside}</div></div>)}</div>
               </article>
 
@@ -186,13 +254,22 @@ export default function Home() {
                 <div className="timeline">{result.analysis.premortem.map((p,i)=><div key={i}><i>{i+1}</i><span><b>{p.step}</b><small>조기 신호 · {p.earlySignal}</small></span></div>)}</div>
               </article>
 
-              <ResultList label="EVIDENCE CHECK" title="결정 전에 확인할 데이터" items={result.analysis.evidenceToCheck} />
+              <ResultList label="EVIDENCE CHECK" title="결정 전에 직접 확인할 것" items={result.analysis.evidenceToCheck} />
 
               <article className="panel actionPanel full">
                 <p className="panelLabel">THE SMALLEST REVERSIBLE TEST</p>
-                <h3>결정하지 말고, 먼저 이것을 검증하세요.</h3>
+                <h3>결정하지 말고, 먼저 하나를 검증하세요.</h3>
                 <p className="bigAction">{result.analysis.reversibleExperiment}</p>
-                <div className="rule"><b>판단 규칙</b><span>{result.analysis.decisionRule}</span></div>
+                <div className="rule"><b>실행 조건</b><span>{result.analysis.decisionRule}</span></div>
+              </article>
+
+              <article className="decisionCard full">
+                <p className="panelLabel">DECISION CARD</p>
+                <h3>{result.analysis.decisionCard.oneSentence}</h3>
+                <div className="cardGrid">
+                  <div><span>NEXT CHECK</span><p>{result.analysis.decisionCard.nextCheck}</p></div>
+                  <div><span>STOP RULE</span><p>{result.analysis.decisionCard.stopRule}</p></div>
+                </div>
                 <p className="notice">{result.analysis.riskNotice}</p>
               </article>
             </div>
@@ -200,13 +277,34 @@ export default function Home() {
         </section>
       )}
 
-      <footer><b>반대편 · Decision Mirror</b><span>더 좋은 답보다, 더 넓은 판단을.</span><small>AI Championship 2026 prototype · 입력 내용은 서비스에서 별도로 저장하지 않도록 설계했습니다.</small></footer>
+      <footer>
+        <b>반대편</b>
+        <span>Falsify Before You Decide.</span>
+        <small>로그인 없이 체험할 수 있습니다. 입력 내용은 서비스 DB에 별도로 저장하지 않도록 설계했으며, AI 분석 요청은 모델 제공 경로를 통해 처리될 수 있습니다.</small>
+      </footer>
 
-      {loading && <div className="loading"><div><span className="spinner" /><h3>당신의 판단을 반대편에서 보고 있습니다.</h3><p>가정 → 반대 논리 → 실패 경로 → 작은 실험</p><small>AI가 결론을 대신 내리지 않습니다.</small></div></div>}
+      {loading && <div className="loading"><div><span className="spinner" /><h3>당신의 결론이 틀릴 수 있는 이유를 찾고 있습니다.</h3><p>사실/가정 분리 → 반증 조건 → 실패 신호 → 가장 작은 검증</p><small>AI가 결정을 대신 내리지 않습니다.</small></div></div>}
     </main>
   );
 }
 
 function ResultList({ label, title, items, tone = '' }: { label: string; title: string; items: string[]; tone?: string }) {
   return <article className={`panel ${tone}`}><p className="panelLabel">{label}</p><h3>{title}</h3><ul>{items.map((x,i)=><li key={i}><span>{String(i+1).padStart(2,'0')}</span>{x}</li>)}</ul></article>;
+}
+
+function EvidenceLedger({ items }: { items: EvidenceItem[] }) {
+  return (
+    <article className="panel ledger">
+      <p className="panelLabel">EVIDENCE LEDGER</p>
+      <h3>무엇을 알고, 무엇을 믿고, 무엇을 모르는가</h3>
+      <div className="ledgerList">
+        {items.map((x, i) => (
+          <div key={i} className="ledgerRow">
+            <span className={`status status-${x.status}`}>{x.status}</span>
+            <div><b>{x.claim}</b><p>{x.why}</p></div>
+          </div>
+        ))}
+      </div>
+    </article>
+  );
 }
