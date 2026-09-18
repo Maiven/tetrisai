@@ -106,7 +106,7 @@ export default function Home() {
             <div className="examples">
               <span>예시</span>
               {EXAMPLES.map((x) => <button key={x} onClick={() => analyze(x)}>{x}</button>)}
-              <button className="demo" onClick={() => analyze(DEMO)}>▶ 10초 데모</button>
+              <button className="demo" onClick={() => analyze(DEMO)}>▶ 로그인 없이 10초 데모</button>
             </div>
           </div>
 
@@ -121,7 +121,7 @@ export default function Home() {
         <div className="trustline">
           <span>◉ 결론을 강요하지 않음</span>
           <span>◐ 숨은 가정과 반대 논리 탐색</span>
-          <span>◎ API 장애 시에도 핵심 데모 유지</span>
+          <span>◎ 로그인·회원가입 없이 바로 체험</span>
         </div>
       </section>
 
