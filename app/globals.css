@@ -64,3 +64,6 @@
 
 @media(max-width:900px){.activationBrief{grid-template-columns:1fr}.ontologyRelations>div{grid-template-columns:auto 1fr}.ontologyRelations>div>i{grid-column:1/-1}.ontologyStats{grid-template-columns:1fr 1fr}}
 @media(max-width:720px){.activationRail{grid-template-columns:1fr}.activationRail em{transform:rotate(90deg);text-align:center}.quickStartGrid{grid-template-columns:1fr}.quickStartHead{align-items:flex-start;flex-direction:column}.ontologyMap>summary{align-items:flex-start;flex-direction:column}.ontologyRelations>div{grid-template-columns:1fr}.ontologyRelations p{white-space:normal}.ontologyRelations>div>i{grid-column:auto}.ontologyStats{grid-template-columns:1fr 1fr}}
+
+.ontologyValidation{display:flex;align-items:center;justify-content:space-between;gap:12px;background:#f8fafc;border:1px solid #e7ebf0;border-radius:13px;padding:10px 12px;margin-bottom:10px}.ontologyValidation span{font-size:9px;font-weight:900;letter-spacing:.04em;border-radius:999px;padding:5px 7px}.ontologyValidation span.valid{background:#e9f7ef;color:#3a7559}.ontologyValidation span.review{background:#fff1df;color:#95602f}.ontologyValidation small{font-size:8px;line-height:1.45;color:#8390a0;text-align:right}
+@media(max-width:720px){.ontologyValidation{align-items:flex-start;flex-direction:column}.ontologyValidation small{text-align:left}}
