@@ -1,6 +1,6 @@
 import { generateText, Output } from 'ai';
 import { z } from 'zod';
-import { buildDecisionGraph, getOntologyPrompt, STARTUP_ONTOLOGY_VERSION } from '../../../lib/startup-ontology';
+import { buildDecisionGraph, getOntologyPrompt, STARTUP_ONTOLOGY_VERSION, validateDecisionGraph } from '../../../lib/startup-ontology';
 
 export const runtime = 'nodejs';
 export const maxDuration = 30;
@@ -307,6 +307,7 @@ export async function POST(req: Request) {
           model: 'Curated startup due-diligence demo · no login required',
           analysis: DEMO_ANALYSIS,
           ontologyGraph: graph,
+          ontologyValidation: validateDecisionGraph(graph),
           ontologyVersion: STARTUP_ONTOLOGY_VERSION,
         },
         { headers: { 'Cache-Control': 'public, max-age=300' } },
@@ -393,6 +394,7 @@ ${verifiedEvidenceText}
         model: 'OpenAI GPT-5.6 Sol · Ontology-guided Startup Due Diligence',
         analysis: result.output,
         ontologyGraph,
+        ontologyValidation: validateDecisionGraph(ontologyGraph),
         ontologyVersion: STARTUP_ONTOLOGY_VERSION,
       },
       { headers: { 'Cache-Control': 'no-store, max-age=0' } },
@@ -400,12 +402,14 @@ ${verifiedEvidenceText}
   } catch (error) {
     console.error('AI analysis failed:', error);
     const fallbackAnalysis = fallback(question);
+    const fallbackGraph = buildDecisionGraph(fallbackAnalysis, question || fallbackAnalysis.reframedDecision, []);
     return Response.json(
       {
         mode: 'fallback',
         model: 'Local Ontology-guided Due Diligence Framework',
         analysis: fallbackAnalysis,
-        ontologyGraph: buildDecisionGraph(fallbackAnalysis, question || fallbackAnalysis.reframedDecision, []),
+        ontologyGraph: fallbackGraph,
+        ontologyValidation: validateDecisionGraph(fallbackGraph),
         ontologyVersion: STARTUP_ONTOLOGY_VERSION,
       },
       { status: 200, headers: { 'Cache-Control': 'no-store, max-age=0' } },
