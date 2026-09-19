@@ -6,6 +6,13 @@ export const metadata: Metadata = {
   description: '입사·잔류·이직·역할·보상·스톡옵션 결정을 회사·역할·리더·보상·학습의 5-Lens로 검증하는 Employee-side Startup Due Diligence AI.',
   keywords: ['스타트업 이직', '스타트업 커리어', '스톡옵션', '스타트업 오퍼', '의사결정', 'AI', 'employee due diligence', 'startup career'],
   robots: { index: true, follow: true },
+  alternates: {
+    canonical: 'https://decision-mirror-eight.vercel.app/',
+    languages: {
+      'ko-KR': 'https://decision-mirror-eight.vercel.app/',
+      'en': 'https://decision-mirror-eight.vercel.app/en',
+    },
+  },
   openGraph: {
     title: '반대편 · Startup Employee Due Diligence',
     description: '회사보다 먼저, 내 커리어가 투자할 곳을 실사하세요.',
