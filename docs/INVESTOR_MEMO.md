@@ -368,7 +368,7 @@ Raise when the product demonstrates that the ontology/evidence loop changes beha
 Implemented:
 
 - login-free public service
-- 10-second deterministic demo
+- instant guided example for zero-friction first use
 - 5-Lens Startup Due Diligence
 - falsification / flip condition
 - realistic negative preview
