@@ -60,7 +60,7 @@ type OntologyEdge = {
 };
 type DecisionGraph = { ontologyVersion: string; nodes: OntologyNode[]; edges: OntologyEdge[] };
 type ApiResult = {
-  mode: 'ai' | 'fallback' | 'demo';
+  mode: 'ai' | 'fallback' | 'sample';
   model: string;
   analysis: Analysis;
   ontologyGraph?: DecisionGraph;
@@ -124,8 +124,8 @@ const ROLES = ['선택 안 함', 'Product/PM', 'Data/AI', 'Engineering', 'Design
 const HEADCOUNTS = ['선택 안 함', '1~19명', '20~50명', '51~200명', '201명 이상', '모름'];
 const INITIAL_LEANS = ['선택 안 함', '실행/합류 쪽', '보류/잔류 쪽', '반대 선택지 쪽', '아직 모름'];
 
-const DEMO = '현재 직장은 안정적이지만 성장 속도가 느립니다. 연봉이 15% 높은 Series A 스타트업으로 이직 제안을 받았고 스톡옵션도 있습니다.';
-const DEMO_CONTEXT: StartupContext = {
+const SAMPLE = '현재 직장은 안정적이지만 성장 속도가 느립니다. 연봉이 15% 높은 Series A 스타트업으로 이직 제안을 받았고 스톡옵션도 있습니다.';
+const SAMPLE_CONTEXT: StartupContext = {
   decisionType: '스타트업 합류',
   stage: 'Series A',
   role: 'Data/AI',
@@ -183,20 +183,20 @@ export default function Home() {
 
   async function analyze(
     value?: string,
-    demo = false,
+    sample = false,
     verifiedEvidence: string[] = [],
     publicEvidence: string[] = [],
   ) {
     const q = (value ?? question).trim();
     setError('');
-    if (!demo && q.length < 8) {
+    if (!sample && q.length < 8) {
       setError('조금 더 구체적으로 적어주세요. 8자 이상이면 좋습니다.');
       return;
     }
 
-    const activeContext = demo ? DEMO_CONTEXT : context;
-    if (demo) setContext(DEMO_CONTEXT);
-    setQuestion(q || DEMO);
+    const activeContext = sample ? SAMPLE_CONTEXT : context;
+    if (sample) setContext(SAMPLE_CONTEXT);
+    setQuestion(q || SAMPLE);
     if (verifiedEvidence.length === 0 && publicEvidence.length === 0) {
       setReflection('');
       setEvidenceNotes({});
@@ -213,8 +213,8 @@ export default function Home() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          question: q || DEMO,
-          demo,
+          question: q || SAMPLE,
+          sample,
           context: normalizedContext,
           verifiedEvidence,
           publicEvidence,
@@ -473,7 +473,7 @@ export default function Home() {
                   </button>
                 ))}
               </div>
-              <button className="instantDemo" onClick={() => analyze(DEMO, true)}>▶ 입력 없이 10초 데모 보기</button>
+              <button className="instantDemo" onClick={() => analyze(SAMPLE, true)}>▶ 입력 없이 바로 체험하기</button>
             </div>
           </div>
 
@@ -508,7 +508,7 @@ export default function Home() {
               <i>→</i>
               <div><b>7일</b><span>새 증거로 재실사</span></div>
             </div>
-            <button onClick={() => analyze(DEMO, true)}>이 결과를 10초 만에 체험하기 →</button>
+            <button onClick={() => analyze(SAMPLE, true)}>같은 흐름으로 바로 시작하기 →</button>
             <p className="previewLimit"><b>AI 한계 공개:</b> 반대편은 비공개 런웨이·리더 행동·지분 미래가치를 알 수 없습니다. 모르는 것은 점수로 꾸미지 않고 질문으로 돌려줍니다.</p>
           </div>
         </div>
@@ -635,7 +635,7 @@ export default function Home() {
             <header className="resultHeader">
               <div>
                 <span className={`mode ${result.mode}`}>
-                  {result.mode === 'ai' ? 'LIVE STARTUP DUE DILIGENCE' : result.mode === 'demo' ? '10-SECOND STARTUP DEMO' : 'SAFE FALLBACK MODE'}
+                  {result.mode === 'ai' ? 'LIVE STARTUP DUE DILIGENCE' : result.mode === 'demo' ? '10-SECOND STARTUP SAMPLE' : 'SAFE FALLBACK MODE'}
                 </span>
                 <h2>좋고 나쁨이 아니라,<br />아직 무엇을 모르는지 찾았습니다.</h2>
                 <p>{result.model}</p>
@@ -830,12 +830,12 @@ export default function Home() {
       <section className="purchaseSection section" id="pricing">
         <p className="eyebrow">FROM USEFUL → WORTH PAYING FOR</p>
         <h2>매달 구독할 이유를 만들기보다,<br />결정이 비싼 순간에 값을 만듭니다.</h2>
-        <p className="sectionLead">첫 유료 wedge는 “커리어 AI 구독”이 아니라 <b>오퍼·잔류·역할·스톡옵션 같은 한 번의 중요한 결정을 7일 동안 끝까지 실사하는 패스</b>입니다.</p>
+        <p className="sectionLead">반대편은 월 구독을 강요하지 않습니다. <b>오퍼·잔류·역할·스톡옵션처럼 값비싼 한 번의 결정을 7일 동안 끝까지 실사하는 제품</b>으로 시작합니다.</p>
 
         <div className="pricingStatus">
-          <span>WANTED AI CHAMPIONSHIP DEMO</span>
-          <b>심사·투표 기간에는 Deep Diligence 기능까지 로그인 없이 무료 공개합니다.</b>
-          <small>아래 가격은 정식 출시 시 검증할 가격 가설이며, 현재 서비스에서 결제를 받지 않습니다.</small>
+          <span>WANTED AI CHAMPIONSHIP SAMPLE</span>
+          <b>지금은 Launch Access 기간으로 Deep Diligence 전 기능을 로그인 없이 사용할 수 있습니다.</b>
+          <small>정식 유료 전환 전 Founding Access를 운영 중입니다. 아래 가격은 첫 상용 가격으로 검증할 예정입니다.</small>
         </div>
 
         <div className="pricingGrid">
@@ -858,11 +858,11 @@ export default function Home() {
           <article className="featuredPlan">
             <div className="planBadge">PRIMARY PAID WEDGE</div>
             <div className="planTop">
-              <span>ONE DECISION · 7 DAYS</span>
+              <span>DEEP DILIGENCE · 7 DAYS</span>
               <h3>Deep Diligence Pass</h3>
               <p>오퍼·잔류·역할·스톡옵션 결정을 실제 증거가 생길 때까지 추적합니다.</p>
             </div>
-            <div className="planPrice"><strong>₩19,900</strong><small>Founding price hypothesis · 정상가 가설 ₩29,000</small></div>
+            <div className="planPrice"><strong>₩19,900</strong><small>Founding price · 정식 가격 ₩29,000 예정</small></div>
             <div className="planFeatures">
               <span>✓ 전체 5-Lens + Reality Check</span>
               <span>✓ 채용공고·오퍼 Source Audit</span>
@@ -871,7 +871,7 @@ export default function Home() {
               <span>✓ 10분 → 24시간 → 7일 Sprint</span>
               <span>✓ Local Decision Passport</span>
             </div>
-            <button onClick={() => analyze(DEMO, true)}>대회 기간 전체 기능 무료 체험 →</button>
+            <button onClick={() => analyze(SAMPLE, true)}>Deep Diligence 시작하기 →</button>
             <small className="planTrust">퇴사·입사를 추천하는 상품이 아니라, 확인되지 않은 정보를 줄이는 상품입니다.</small>
           </article>
 
