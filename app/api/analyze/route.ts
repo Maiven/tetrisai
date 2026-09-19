@@ -87,7 +87,7 @@ type StartupContext = {
   initialLean?: string;
 };
 
-const DEMO_ANALYSIS: Analysis = {
+const SAMPLE_ANALYSIS: Analysis = {
   reframedDecision: 'Series A 스타트업으로 옮겨 15% 높은 연봉과 스톡옵션을 받는 대신 더 큰 조직 불확실성을 감수할 것인가',
   realQuestion: '오퍼가 좋아 보이는지가 아니라, 이 회사가 내 커리어의 다음 2~3년을 맡길 만큼 회사·역할·리더·보상·학습의 핵심 가정을 증명했는지 실사하는 문제입니다.',
   assumptions: [
@@ -337,13 +337,13 @@ export async function POST(req: Request) {
       ? body.sourceExcerpt.trim().slice(0, 4000)
       : '';
 
-    if (body?.demo === true) {
-      const graph = buildDecisionGraph(DEMO_ANALYSIS, question || DEMO_ANALYSIS.reframedDecision, [], []);
+    if (body?.sample === true) {
+      const graph = buildDecisionGraph(SAMPLE_ANALYSIS, question || SAMPLE_ANALYSIS.reframedDecision, [], []);
       return Response.json(
         {
-          mode: 'demo',
-          model: 'Curated startup due-diligence demo · no login required',
-          analysis: DEMO_ANALYSIS,
+          mode: 'sample',
+          model: 'Guided startup due-diligence example · no login required',
+          analysis: SAMPLE_ANALYSIS,
           ontologyGraph: graph,
           ontologyValidation: validateDecisionGraph(graph),
           ontologyVersion: STARTUP_ONTOLOGY_VERSION,
