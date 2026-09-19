@@ -382,6 +382,7 @@ export default function Home() {
           <div className="navlinks">
             <a href="#for-startup">누구를 위한가</a>
             <a href="#how">실사 프로토콜</a>
+            <a href="#pricing">가격</a>
             <button onClick={() => document.getElementById('decision-input')?.focus()}>내 결정 실사하기 ↗</button>
           </div>
         </nav>
@@ -826,7 +827,79 @@ export default function Home() {
         </section>
       )}
 
-      <section className="businessPath section">
+      <section className="purchaseSection section" id="pricing">
+        <p className="eyebrow">FROM USEFUL → WORTH PAYING FOR</p>
+        <h2>매달 구독할 이유를 만들기보다,<br />결정이 비싼 순간에 값을 만듭니다.</h2>
+        <p className="sectionLead">첫 유료 wedge는 “커리어 AI 구독”이 아니라 <b>오퍼·잔류·역할·스톡옵션 같은 한 번의 중요한 결정을 7일 동안 끝까지 실사하는 패스</b>입니다.</p>
+
+        <div className="pricingStatus">
+          <span>WANTED AI CHAMPIONSHIP DEMO</span>
+          <b>심사·투표 기간에는 Deep Diligence 기능까지 로그인 없이 무료 공개합니다.</b>
+          <small>아래 가격은 정식 출시 시 검증할 가격 가설이며, 현재 서비스에서 결제를 받지 않습니다.</small>
+        </div>
+
+        <div className="pricingGrid">
+          <article>
+            <div className="planTop">
+              <span>FREE</span>
+              <h3>Decision Check</h3>
+              <p>“이 결정에서 내가 아직 모르는 게 뭔지” 빠르게 확인합니다.</p>
+            </div>
+            <div className="planPrice"><strong>₩0</strong><small>첫 실사</small></div>
+            <div className="planFeatures">
+              <span>✓ 고민 한 문장 분석</span>
+              <span>✓ Startup 5-Lens</span>
+              <span>✓ 첫 확인 질문</span>
+              <span>✓ Flip Condition</span>
+            </div>
+            <button onClick={() => document.getElementById('decision-input')?.focus()}>무료로 확인하기 →</button>
+          </article>
+
+          <article className="featuredPlan">
+            <div className="planBadge">PRIMARY PAID WEDGE</div>
+            <div className="planTop">
+              <span>ONE DECISION · 7 DAYS</span>
+              <h3>Deep Diligence Pass</h3>
+              <p>오퍼·잔류·역할·스톡옵션 결정을 실제 증거가 생길 때까지 추적합니다.</p>
+            </div>
+            <div className="planPrice"><strong>₩19,900</strong><small>Founding price hypothesis · 정상가 가설 ₩29,000</small></div>
+            <div className="planFeatures">
+              <span>✓ 전체 5-Lens + Reality Check</span>
+              <span>✓ 채용공고·오퍼 Source Audit</span>
+              <span>✓ 최신 Public Evidence Agent</span>
+              <span>✓ Evidence Loop 재실사</span>
+              <span>✓ 10분 → 24시간 → 7일 Sprint</span>
+              <span>✓ Local Decision Passport</span>
+            </div>
+            <button onClick={() => analyze(DEMO, true)}>대회 기간 전체 기능 무료 체험 →</button>
+            <small className="planTrust">퇴사·입사를 추천하는 상품이 아니라, 확인되지 않은 정보를 줄이는 상품입니다.</small>
+          </article>
+
+          <article>
+            <div className="planTop">
+              <span>B2B2C</span>
+              <h3>Sponsored Access</h3>
+              <p>리크루팅 플랫폼·VC·액셀러레이터가 후보자와 직원의 실사 이용권을 제공합니다.</p>
+            </div>
+            <div className="planPrice"><strong>Pilot</strong><small>기관별 계약</small></div>
+            <div className="planFeatures">
+              <span>✓ Access code / cohort pass</span>
+              <span>✓ 개인 입력·결과 sponsor 비공개</span>
+              <span>✓ 개인정보 없는 사용량 지표</span>
+              <span>✓ 커리어 교육·온보딩 연계</span>
+            </div>
+            <a className="planLink" href="#business">B2B2C 구조 보기 ↓</a>
+          </article>
+        </div>
+
+        <div className="buyReason">
+          <div><span>왜 무료 ChatGPT 대신 사나?</span><b>스타트업 전용 실사 ontology + 공개자료 조사 + 실제 질문 + 7일 Evidence Loop가 한 workflow에 있습니다.</b></div>
+          <div><span>왜 월 구독이 아닌가?</span><b>오퍼 같은 결정은 빈도보다 순간의 가치와 마감 압력이 큽니다. 먼저 1회성 결제 의사를 검증합니다.</b></div>
+          <div><span>무엇을 보장하나?</span><b>좋은 결과나 연봉 상승을 보장하지 않습니다. “무엇을 확인해야 하는가”를 구체화하고 증거 확보를 돕습니다.</b></div>
+        </div>
+      </section>
+
+      <section className="businessPath section" id="business">
         <p className="eyebrow">BUSINESS PATH</p>
         <h2>사용자는 직원,<br />지불자는 개인 또는 생태계가 될 수 있습니다.</h2>
         <p className="sectionLead">개인의 민감한 판단은 끝까지 개인에게 남겨두면서도, 커리어 의사결정이 발생하는 순간에 유료 가치를 만들 수 있습니다.</p>
@@ -865,7 +938,7 @@ export default function Home() {
       <footer>
         <b>반대편</b>
         <span>Startup Employee Due Diligence · Falsify Before You Decide.</span>
-        <small>로그인 없이 체험할 수 있습니다. 입력 내용은 서비스 DB에 별도로 저장하지 않도록 설계했으며, AI 분석 요청은 모델 제공 경로를 통해 처리될 수 있습니다. 회사명·실명·비공개 경영정보는 입력하지 마세요.</small><div className="footerLinks"><a href="/methodology">방법론</a><a href="/privacy">프라이버시 원칙</a><a href="https://github.com/Maiven/tetrisai" target="_blank" rel="noreferrer">GitHub</a></div>
+        <small>로그인 없이 체험할 수 있습니다. 입력 내용은 서비스 DB에 별도로 저장하지 않도록 설계했으며, AI 분석 요청은 모델 제공 경로를 통해 처리될 수 있습니다. 회사명·실명·비공개 경영정보는 입력하지 마세요.</small><div className="footerLinks"><a href="#pricing">가격</a><a href="/methodology">방법론</a><a href="/privacy">프라이버시 원칙</a><a href="https://github.com/Maiven/tetrisai" target="_blank" rel="noreferrer">GitHub</a></div>
       </footer>
 
       {loading && (
