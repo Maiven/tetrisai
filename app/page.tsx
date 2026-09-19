@@ -157,6 +157,7 @@ export default function Home() {
   const [sourceExcerpt, setSourceExcerpt] = useState('');
   const [passport, setPassport] = useState<SavedPassport | null>(null);
   const [passportMessage, setPassportMessage] = useState('');
+  const [resultDepth, setResultDepth] = useState<'essential' | 'full'>('essential');
   const resultsRef = useRef<HTMLElement | null>(null);
   const count = useMemo(() => question.length, [question]);
   const evidenceCount = useMemo(
@@ -223,6 +224,7 @@ export default function Home() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || '분석에 실패했습니다.');
       setResult(data);
+      setResultDepth('essential');
       requestAnimationFrame(() => resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
     } catch (e) {
       setError(e instanceof Error ? e.message : '잠시 후 다시 시도해주세요.');
@@ -418,6 +420,12 @@ export default function Home() {
                 maxLength={700}
                 value={question}
                 onChange={(e) => setQuestion(e.target.value)}
+                onKeyDown={(e) => {
+                  if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+                    e.preventDefault();
+                    analyze();
+                  }
+                }}
                 placeholder="예: 투자 지연이 반복되고 제 역할은 계속 넓어지는데, 지금 회사를 계속 다녀야 할까?"
               />
 
@@ -621,7 +629,7 @@ export default function Home() {
       </section>
 
       {result && (
-        <section className="results" ref={resultsRef}>
+        <section className={`results depth-${resultDepth}`} ref={resultsRef}>
           <div className="resultsInner">
             <header className="resultHeader">
               <div>
@@ -632,8 +640,12 @@ export default function Home() {
                 <p>{result.model}</p>
               </div>
               <div className="headerActions">
+                <div className="depthToggle" role="group" aria-label="결과 상세 수준">
+                  <button className={resultDepth === 'essential' ? 'active' : ''} onClick={() => setResultDepth('essential')}>핵심만</button>
+                  <button className={resultDepth === 'full' ? 'active' : ''} onClick={() => setResultDepth('full')}>전체 실사</button>
+                </div>
                 <button onClick={copySummary}>{copied ? '복사 완료 ✓' : '실사 카드 복사'}</button>
-                <button onClick={() => { setResult(null); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>새 결정 실사</button>
+                <button onClick={() => { setResult(null); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>새 결정</button>
               </div>
             </header>
 
@@ -856,7 +868,23 @@ export default function Home() {
         <small>로그인 없이 체험할 수 있습니다. 입력 내용은 서비스 DB에 별도로 저장하지 않도록 설계했으며, AI 분석 요청은 모델 제공 경로를 통해 처리될 수 있습니다. 회사명·실명·비공개 경영정보는 입력하지 마세요.</small><div className="footerLinks"><a href="/methodology">방법론</a><a href="/privacy">프라이버시 원칙</a><a href="https://github.com/Maiven/tetrisai" target="_blank" rel="noreferrer">GitHub</a></div>
       </footer>
 
-      {loading && <div className="loading"><div><span className="spinner" /><h3>직원 편에서 회사를 실사하고 있습니다.</h3><p>회사 → 역할 → 리더 → 보상 → 학습 → 반증 조건</p><small>AI가 퇴사·입사를 대신 결정하지 않습니다.</small></div></div>}
+      {loading && (
+        <div className="loading" role="status" aria-live="polite">
+          <div className="loadingCard">
+            <div className="loadingMark"><span /><span /></div>
+            <p className="loadingEyebrow">DUE DILIGENCE IN PROGRESS</p>
+            <h3>확신을 만드는 대신,<br />확인해야 할 것을 찾고 있습니다.</h3>
+            <div className="loadingTrack"><i /></div>
+            <div className="loadingSteps">
+              <span className="active">01 · 맥락 구조화</span>
+              <span>02 · 5-Lens 실사</span>
+              <span>03 · 반증 조건</span>
+              <span>04 · 첫 행동</span>
+            </div>
+            <small>결정은 대신 내리지 않습니다. 모르는 정보는 질문으로 남깁니다.</small>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
