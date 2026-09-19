@@ -473,7 +473,7 @@ export default function Home() {
                   </button>
                 ))}
               </div>
-              <button className="instantDemo" onClick={() => analyze(SAMPLE, true)}>▶ 입력 없이 바로 체험하기</button>
+              <button className="instantStart" onClick={() => analyze(SAMPLE, true)}>▶ 입력 없이 바로 체험하기</button>
             </div>
           </div>
 
@@ -635,7 +635,7 @@ export default function Home() {
             <header className="resultHeader">
               <div>
                 <span className={`mode ${result.mode}`}>
-                  {result.mode === 'ai' ? 'LIVE STARTUP DUE DILIGENCE' : result.mode === 'demo' ? '10-SECOND STARTUP SAMPLE' : 'SAFE FALLBACK MODE'}
+                  {result.mode === 'ai' ? 'LIVE STARTUP DUE DILIGENCE' : result.mode === 'sample' ? 'GUIDED DUE DILIGENCE' : 'SAFE FALLBACK MODE'}
                 </span>
                 <h2>좋고 나쁨이 아니라,<br />아직 무엇을 모르는지 찾았습니다.</h2>
                 <p>{result.model}</p>
@@ -833,7 +833,7 @@ export default function Home() {
         <p className="sectionLead">반대편은 월 구독을 강요하지 않습니다. <b>오퍼·잔류·역할·스톡옵션처럼 값비싼 한 번의 결정을 7일 동안 끝까지 실사하는 제품</b>으로 시작합니다.</p>
 
         <div className="pricingStatus">
-          <span>WANTED AI CHAMPIONSHIP SAMPLE</span>
+          <span>LAUNCH ACCESS</span>
           <b>지금은 Launch Access 기간으로 Deep Diligence 전 기능을 로그인 없이 사용할 수 있습니다.</b>
           <small>정식 유료 전환 전 Founding Access를 운영 중입니다. 아래 가격은 첫 상용 가격으로 검증할 예정입니다.</small>
         </div>
