@@ -292,6 +292,87 @@ function fallback(question: string): Analysis {
   };
 }
 
+function fallbackEnglish(question: string): Analysis {
+  const q = question.trim() || 'I am facing an important startup career decision.';
+  return {
+    reframedDecision: q,
+    realQuestion: 'What evidence about the company, role, leadership, compensation, and future options must be verified before this decision is responsible?',
+    assumptions: [
+      'The information currently available may feel more complete than it actually is.',
+      'Visible signals such as title, funding stage, or compensation may be standing in for the harder questions.',
+      'The recovery cost of a wrong choice may not yet be compared with the opportunity cost of waiting.',
+    ],
+    counterarguments: [
+      'Company growth and your career growth are not the same thing.',
+      'A broader scope does not automatically mean more authority, feedback, or learning.',
+      'A time-sensitive opportunity can still be a poor trade if the key unknowns remain unverified.',
+    ],
+    blindSpots: ['runway and financing milestones', 'real decision rights and 90-day success criteria', 'equity terms and exercise conditions', 'what remains valuable if the startup outcome disappoints'],
+    evidenceLedger: [
+      { claim: 'What I have directly verified', status: '사실', why: 'Treat information as stronger evidence when it comes from a document, direct observation, or a concrete example.' },
+      { claim: 'This company will accelerate my growth', status: '가정', why: 'Company growth and individual learning need separate evidence.' },
+      { claim: 'How the manager actually makes decisions', status: '미확인', why: 'Interview impressions do not prove feedback or delegation behavior.' },
+      { claim: 'The real economic meaning of the equity', status: '미확인', why: 'Option count alone is not enough to understand ownership, exercise terms, dilution, or liquidity.' },
+    ],
+    startupDiligence: [
+      { dimension: '회사 생존 신호', status: '정보 부족', signal: 'Funding stage alone does not establish operating resilience.', missingEvidence: 'runway, next financing milestone, operating priorities', questionToAsk: 'What milestones must the company hit before the next financing decision, and what would change the current hiring or spending plan?' },
+      { dimension: '역할의 실제', status: '정보 부족', signal: 'The title does not yet prove the actual scope or authority.', missingEvidence: '90-day outcomes, KPIs, decision rights, non-goals', questionToAsk: 'What three outcomes would make this role successful after 90 days, and which decisions would I own without escalation?' },
+      { dimension: '리더·의사결정권', status: '정보 부족', signal: 'The manager relationship still needs behavioral evidence.', missingEvidence: 'feedback cadence, disagreement example, priority ownership', questionToAsk: 'Tell me about a recent case where someone on the team disagreed with the manager. How was the final decision made?' },
+      { dimension: '현금·지분 보상', status: '검증 우선', signal: 'Cash may be clear while equity remains economically ambiguous.', missingEvidence: 'ownership basis, strike/exercise price, vesting, post-termination exercise, liquidity constraints', questionToAsk: 'What percentage of fully diluted ownership does this grant represent, and what are the vesting and exercise conditions?' },
+      { dimension: '학습·다음 선택지', status: '검증 우선', signal: 'Fast company growth does not guarantee durable career capital.', missingEvidence: 'skills, portfolio evidence, mentor/peer quality, future options', questionToAsk: 'What should I be able to prove in the market 12 months from now that I cannot prove today?' },
+    ],
+    realityCheck: {
+      negativePreview: 'What has been hardest about this team in the last year, and why have strong people left?',
+      alternativeQuality: 'Compare each option by what skills, outcomes, network, and future choices it is likely to leave you with after 12 months.',
+      promiseGap: 'Which promises about role, scope, growth, or compensation are written down or demonstrated by recent examples rather than implied?',
+    },
+    sourceAudit: { present: false, claims: [], missingTerms: [], note: 'Add a public job description or sanitized offer summary to audit documented promises and missing terms.' },
+    flipConditions: [
+      'If the company cannot explain the role’s decision rights and near-term success criteria, do not treat a bigger title as proven career growth.',
+      'If important equity terms remain unavailable or unclear, do not count the equity as equivalent to cash.',
+      'If the alternative option leaves materially stronger skills or future choices, re-open the current preference.',
+    ],
+    reversibility: {
+      level: '중간',
+      explanation: 'A startup career move can be reversed, but not without time, income, narrative, and network costs.',
+      costToReverse: 'Estimate the cash runway, time to re-enter the market, and career-story cost if you need to change course within 6–12 months.',
+    },
+    decisionTension: {
+      actTooSoon: 'You may mistake visible signals for evidence and inherit the company’s information asymmetry.',
+      waitTooLong: 'You may lose a time-sensitive role or remain in a position that is no longer building useful career capital.',
+    },
+    futures: [
+      { title: 'Act now', description: 'Make the move with the information currently available.', upside: 'You secure the opportunity quickly.', downside: 'The largest unknowns remain yours to absorb.' },
+      { title: 'Stay for now', description: 'Keep the current position while collecting more evidence.', upside: 'You protect downside and existing relationships.', downside: 'A time-sensitive option may close.' },
+      { title: 'Run a short diligence sprint', description: 'Verify the material unknowns before committing.', upside: 'You reduce information asymmetry at relatively low cost.', downside: 'You must ask direct questions under a deadline.' },
+    ],
+    premortem: [
+      { step: 'Mistook funding or brand for resilience', earlySignal: 'Priorities and hiring change quickly while operating milestones remain vague.' },
+      { step: 'Mistook responsibility for authority', earlySignal: 'Important decisions keep escalating upward and success criteria move.' },
+      { step: 'Treated equity like guaranteed compensation', earlySignal: 'You can describe the option count but not the ownership basis or exercise terms.' },
+    ],
+    evidenceToCheck: [
+      'Company: verify operating milestones and what would trigger a change in hiring or spending.',
+      'Role: verify 90-day outcomes and actual decision rights.',
+      'Leadership: ask for a recent example of disagreement and feedback.',
+      'Compensation: verify equity ownership basis, vesting, and exercise conditions in official documents.',
+    ],
+    verificationSprint: [
+      { horizon: '지금 10분', action: 'Choose the three unknowns most likely to change your decision and write one question for each.', evidence: 'You have three concrete questions and know who or what can answer them.' },
+      { horizon: '24시간 안', action: 'Ask at least two relevant people or official sources for concrete answers.', evidence: 'You have examples, documents, numbers, or an explicit “not available” response.' },
+      { horizon: '7일 안', action: 'Reclassify the new information as fact, assumption, or unknown and re-run the diligence.', evidence: 'The material unknowns are smaller and your stop rule is clearer.' },
+    ],
+    reversibleExperiment: 'Before accepting, quitting, or changing roles, run a seven-day evidence sprint across the five diligence lenses.',
+    decisionRule: 'If the highest-impact unknowns in company viability, role reality, or leadership remain unresolved, delay irreversible commitment and keep verifying.',
+    decisionCard: {
+      oneSentence: 'Do not choose the startup story; diligence the claims your career is about to depend on.',
+      nextCheck: 'Verify the single unknown most likely to change the decision.',
+      stopRule: 'Pause if material questions are repeatedly avoided or if recruiter, manager, and employee accounts materially conflict.',
+    },
+    riskNotice: 'Bandaepyeon does not predict company survival or equity value and does not provide legal, tax, investment, or employment-law advice. Verify regulated questions with official documents and qualified professionals in the relevant jurisdiction.',
+  };
+}
+
 function normalizePublicEvidence(value: unknown): string[] {
   if (!Array.isArray(value)) return [];
   return value
@@ -465,7 +546,7 @@ ${sourceExcerpt || '제공 없음'}
     );
   } catch (error) {
     console.error('AI analysis failed:', error);
-    const fallbackAnalysis = fallback(question);
+    const fallbackAnalysis = language === 'en' ? fallbackEnglish(question) : fallback(question);
     const fallbackGraph = buildDecisionGraph(fallbackAnalysis, question || fallbackAnalysis.reframedDecision, [], publicEvidence);
     return Response.json(
       {
