@@ -410,6 +410,7 @@ function normalizeContext(value: unknown): StartupContext {
 export async function POST(req: Request) {
   let question = '';
   let publicEvidence: string[] = [];
+  let language: 'ko' | 'en' = 'ko';
   try {
     const body = await req.json();
     question = typeof body?.question === 'string' ? body.question.trim() : '';
@@ -419,7 +420,7 @@ export async function POST(req: Request) {
     const sourceExcerpt = typeof body?.sourceExcerpt === 'string'
       ? body.sourceExcerpt.trim().slice(0, 4000)
       : '';
-    const language: 'ko' | 'en' = body?.language === 'en' ? 'en' : 'ko';
+    language = body?.language === 'en' ? 'en' : 'ko';
 
     if (body?.sample === true) {
       const graph = buildDecisionGraph(SAMPLE_ANALYSIS, question || SAMPLE_ANALYSIS.reframedDecision, [], []);
