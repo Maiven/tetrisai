@@ -337,7 +337,7 @@ export default function GlobalPage() {
           <div>
             <a href="#how">How it works</a>
             <a href="#pricing">Pricing</a>
-            <a href="/methodology">Research</a>
+            <a href="/en/methodology">Research</a>
             <a className="localeSwitch" href="/">한국어</a>
           </div>
         </nav>
@@ -563,7 +563,7 @@ export default function GlobalPage() {
         <div className="globalPricingGrid">
           <article><span>FREE</span><h3>Decision Check</h3><strong>$0</strong><p>5-Lens structure, first verification questions, and flip conditions.</p><button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>Start free →</button></article>
           <article className="globalFeaturedPlan"><span>ONE DECISION · 7 DAYS</span><h3>Deep Diligence Pass</h3><strong>$19 <small>founding price</small></strong><p>Source Audit, public evidence research, Evidence Loop, verification sprint, and Decision Passport.</p><button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>Use Launch Access →</button></article>
-          <article><span>B2B2C</span><h3>Sponsored Access</h3><strong>Pilot</strong><p>For recruiting platforms, accelerators, VC portfolios, and career communities. Sponsors never see individual decision content.</p><a href="mailto:partnerships@bandaepyeon.ai">Partnership inquiry →</a></article>
+          <article><span>B2B2C</span><h3>Sponsored Access</h3><strong>Pilot</strong><p>For recruiting platforms, accelerators, VC portfolios, and career communities. Sponsors never see individual decision content.</p><a href="https://github.com/Maiven/tetrisai/issues/new?title=Partnership%20inquiry" target="_blank" rel="noreferrer">Partnership inquiry →</a></article>
         </div>
       </section>
 
@@ -571,7 +571,7 @@ export default function GlobalPage() {
         <p className="eyebrow">GLOBAL TRUST PRINCIPLE</p>
         <h2>Your career decision is not your employer's dataset.</h2>
         <p>Personal decision content is not designed for employer surveillance. Region-specific equity, tax, employment, and securities questions are treated as items to verify with official documents and qualified local professionals — not as facts the model can safely invent.</p>
-        <div><a href="/en/privacy">Privacy principles</a><a href="/methodology">Research & methodology</a><a href="/api/ontology">Ontology JSON-LD</a><a href="/">한국어</a></div>
+        <div><a href="/en/privacy">Privacy principles</a><a href="/en/methodology">Research & methodology</a><a href="/api/ontology">Ontology JSON-LD</a><a href="/">한국어</a></div>
       </section>
 
       <footer className="globalFooter">
