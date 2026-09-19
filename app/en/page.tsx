@@ -327,7 +327,7 @@ export default function GlobalPage() {
   }
 
   return (
-    <main className="globalProduct">
+    <main className="globalProduct" lang="en">
       <section className="globalHero">
         <nav className="globalNav">
           <a className="globalBrand" href="/en">
@@ -571,7 +571,7 @@ export default function GlobalPage() {
         <p className="eyebrow">GLOBAL TRUST PRINCIPLE</p>
         <h2>Your career decision is not your employer's dataset.</h2>
         <p>Personal decision content is not designed for employer surveillance. Region-specific equity, tax, employment, and securities questions are treated as items to verify with official documents and qualified local professionals — not as facts the model can safely invent.</p>
-        <div><a href="/en/privacy">Privacy principles</a><a href="/en/methodology">Research & methodology</a><a href="/api/ontology">Ontology JSON-LD</a><a href="/">한국어</a></div>
+        <div><a href="/en/privacy">Privacy principles</a><a href="/en/terms">Terms</a><a href="/en/methodology">Research & methodology</a><a href="/api/ontology">Ontology JSON-LD</a><a href="/">한국어</a></div>
       </section>
 
       <footer className="globalFooter">
