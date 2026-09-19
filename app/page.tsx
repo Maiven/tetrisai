@@ -383,6 +383,7 @@ export default function Home() {
             <a href="#for-startup">누구를 위한가</a>
             <a href="#how">실사 프로토콜</a>
             <a href="#pricing">가격</a>
+            <a href="/en" aria-label="English version">EN</a>
             <button onClick={() => document.getElementById('decision-input')?.focus()}>내 결정 실사하기 ↗</button>
           </div>
         </nav>
@@ -938,7 +939,7 @@ export default function Home() {
       <footer>
         <b>반대편</b>
         <span>Startup Employee Due Diligence · Falsify Before You Decide.</span>
-        <small>로그인 없이 체험할 수 있습니다. 입력 내용은 서비스 DB에 별도로 저장하지 않도록 설계했으며, AI 분석 요청은 모델 제공 경로를 통해 처리될 수 있습니다. 회사명·실명·비공개 경영정보는 입력하지 마세요.</small><div className="footerLinks"><a href="#pricing">가격</a><a href="/methodology">방법론</a><a href="/privacy">프라이버시 원칙</a><a href="https://github.com/Maiven/tetrisai" target="_blank" rel="noreferrer">GitHub</a></div>
+        <small>로그인 없이 체험할 수 있습니다. 입력 내용은 서비스 DB에 별도로 저장하지 않도록 설계했으며, AI 분석 요청은 모델 제공 경로를 통해 처리될 수 있습니다. 회사명·실명·비공개 경영정보는 입력하지 마세요.</small><div className="footerLinks"><a href="/en">English</a><a href="#pricing">가격</a><a href="/methodology">방법론</a><a href="/privacy">프라이버시 원칙</a><a href="https://github.com/Maiven/tetrisai" target="_blank" rel="noreferrer">GitHub</a></div>
       </footer>
 
       {loading && (
