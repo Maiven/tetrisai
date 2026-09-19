@@ -22,16 +22,20 @@ function clean(value: unknown, max = 160) {
 }
 
 export async function POST(req: Request) {
+  let language: 'ko' | 'en' = 'ko';
   try {
     const body = await req.json();
     const company = clean(body?.company, 100);
     const website = clean(body?.website, 240);
     const role = clean(body?.role, 80);
     const region = clean(body?.region, 100);
-    const language: 'ko' | 'en' = body?.language === 'en' ? 'en' : 'ko';
+    language = body?.language === 'en' ? 'en' : 'ko';
 
     if (company.length < 2) {
-      return Response.json({ error: '공개 검색할 회사명을 2자 이상 입력해주세요.' }, { status: 400 });
+      return Response.json(
+        { error: language === 'en' ? 'Enter a publicly searchable company name.' : '공개 검색할 회사명을 2자 이상 입력해주세요.' },
+        { status: 400 },
+      );
     }
 
     const result = await generateText({
@@ -84,14 +88,16 @@ ${language === 'en' ? 'Write concise professional English in all non-enum fields
       research: result.output,
       sources,
       searchedAt: new Date().toISOString(),
-      note: '공개 웹 자료만 사용한 2차 증거입니다. 회사 내부 사실은 직접 확인해야 합니다.',
+      note: language === 'en'
+        ? 'This uses public web information as secondary evidence. Internal company facts still require direct verification.'
+        : '공개 웹 자료만 사용한 2차 증거입니다. 회사 내부 사실은 직접 확인해야 합니다.',
     }, {
       headers: { 'Cache-Control': 'no-store, max-age=0' },
     });
   } catch (error) {
     console.error('Public evidence research failed:', error);
     return Response.json(
-      { error: 'Public evidence research could not be completed. Please try again.' },
+      { error: language === 'en' ? 'Public evidence research could not be completed. Please try again.' : '공개 자료 검색을 완료하지 못했습니다. 잠시 후 다시 시도해주세요.' },
       { status: 500 },
     );
   }
