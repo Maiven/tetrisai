@@ -123,6 +123,7 @@ const PUBLIC_LEVEL: Record<PublicResearch['research']['signals'][number]['eviden
 };
 
 const REGIONS = [
+  'Not specified',
   'United States',
   'Canada',
   'United Kingdom',
@@ -162,12 +163,12 @@ const QUICK_STARTS = [
 ];
 
 const defaultContext: Context = {
-  decisionType: 'Startup offer',
-  stage: 'Series A',
-  role: 'Product / PM',
-  headcount: '20–100',
+  decisionType: 'Not specified',
+  stage: 'Not specified',
+  role: 'Not specified',
+  headcount: 'Not specified',
   initialLean: 'Not sure yet',
-  region: 'United States',
+  region: 'Not specified',
 };
 
 export default function GlobalPage() {
@@ -209,12 +210,12 @@ export default function GlobalPage() {
 
   function contextPayload() {
     return {
-      decisionType: context.decisionType,
-      stage: context.stage,
-      role: context.role,
-      headcount: context.headcount,
+      decisionType: context.decisionType === 'Not specified' ? '' : context.decisionType,
+      stage: context.stage === 'Not specified' ? '' : context.stage,
+      role: context.role === 'Not specified' ? '' : context.role,
+      headcount: context.headcount === 'Not specified' ? '' : context.headcount,
       initialLean: context.initialLean,
-      region: context.region,
+      region: context.region === 'Not specified' ? '' : context.region,
     };
   }
 
@@ -370,9 +371,9 @@ export default function GlobalPage() {
                 <summary>Optional context · make the diligence more specific</summary>
                 <div className="globalContextGrid">
                   <GlobalSelect label="Region / jurisdiction" value={context.region} options={REGIONS} onChange={(v) => setContext({ ...context, region: v })} />
-                  <GlobalSelect label="Company stage" value={context.stage} options={['Pre-seed','Seed','Series A','Series B','Series C+','Bootstrapped / unknown']} onChange={(v) => setContext({ ...context, stage: v })} />
-                  <GlobalSelect label="Role" value={context.role} options={['Product / PM','Data / AI','Engineering','Design','Growth / Marketing','Sales / BD','Operations / People','Leadership','Other']} onChange={(v) => setContext({ ...context, role: v })} />
-                  <GlobalSelect label="Company size" value={context.headcount} options={['1–19','20–100','101–250','251+','Unknown']} onChange={(v) => setContext({ ...context, headcount: v })} />
+                  <GlobalSelect label="Company stage" value={context.stage} options={['Not specified','Pre-seed','Seed','Series A','Series B','Series C+','Bootstrapped / unknown']} onChange={(v) => setContext({ ...context, stage: v })} />
+                  <GlobalSelect label="Role" value={context.role} options={['Not specified','Product / PM','Data / AI','Engineering','Design','Growth / Marketing','Sales / BD','Operations / People','Leadership','Other']} onChange={(v) => setContext({ ...context, role: v })} />
+                  <GlobalSelect label="Company size" value={context.headcount} options={['Not specified','1–19','20–100','101–250','251+','Unknown']} onChange={(v) => setContext({ ...context, headcount: v })} />
                   <GlobalSelect label="My current lean" value={context.initialLean} options={['Not sure yet','Leaning yes / accept','Leaning no / stay','Leaning toward another option']} onChange={(v) => setContext({ ...context, initialLean: v })} />
                 </div>
                 <label className="globalSourceInput">
@@ -562,7 +563,7 @@ export default function GlobalPage() {
         <div className="globalLaunchBanner"><span>LAUNCH ACCESS</span><b>Full Deep Diligence is currently open while we validate the global workflow.</b><small>Commercial pricing shown below is the planned founding offer.</small></div>
         <div className="globalPricingGrid">
           <article><span>FREE</span><h3>Decision Check</h3><strong>$0</strong><p>5-Lens structure, first verification questions, and flip conditions.</p><button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>Start free →</button></article>
-          <article className="globalFeaturedPlan"><span>ONE DECISION · 7 DAYS</span><h3>Deep Diligence Pass</h3><strong>$19 <small>founding price</small></strong><p>Source Audit, public evidence research, Evidence Loop, verification sprint, and Decision Passport.</p><button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>Use Launch Access →</button></article>
+          <article className="globalFeaturedPlan"><span>ONE DECISION · 7 DAYS</span><h3>Deep Diligence Pass</h3><strong>$19 <small>founding price</small></strong><p>Source Audit, public evidence research, Evidence Loop, verification sprint, and Decision Passport. Local taxes and any required taxes/fees vary by market.</p><button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>Use Launch Access →</button></article>
           <article><span>B2B2C</span><h3>Sponsored Access</h3><strong>Pilot</strong><p>For recruiting platforms, accelerators, VC portfolios, and career communities. Sponsors never see individual decision content.</p><a href="https://github.com/Maiven/tetrisai/issues/new?title=Partnership%20inquiry" target="_blank" rel="noreferrer">Partnership inquiry →</a></article>
         </div>
       </section>
@@ -612,7 +613,7 @@ function GlobalPublicEvidence({
         <label><span>Official site / careers page · optional</span><input value={website} onChange={(e) => setWebsite(e.target.value)} placeholder="https://..." /></label>
         <button onClick={onSearch} disabled={loading}>{loading ? 'Researching…' : 'Research public evidence →'}</button>
       </div>
-      <small className="globalPublicHint">Context: {region} · {role}. Never paste confidential financials, customer data, or private contracts.</small>
+      <small className="globalPublicHint">Context: {region === 'Not specified' ? 'region not specified' : region} · {role === 'Not specified' ? 'role not specified' : role}. Never paste confidential financials, customer data, or private contracts.</small>
       {error && <p className="globalError">{error}</p>}
       {result && (
         <div className="globalPublicResult">
