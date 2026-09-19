@@ -27,6 +27,8 @@ export async function POST(req: Request) {
     const company = clean(body?.company, 100);
     const website = clean(body?.website, 240);
     const role = clean(body?.role, 80);
+    const region = clean(body?.region, 100);
+    const language: 'ko' | 'en' = body?.language === 'en' ? 'en' : 'ko';
 
     if (company.length < 2) {
       return Response.json({ error: '공개 검색할 회사명을 2자 이상 입력해주세요.' }, { status: 400 });
@@ -56,12 +58,16 @@ export async function POST(req: Request) {
 6) 검색 결과가 없다는 사실을 부정적 증거로 해석하지 않습니다.
 7) 현금·지분 보상은 공개 benchmark가 아니라 해당 회사에 대해 공개 확인 가능한 정보가 있을 때만 언급합니다.
 8) 개인·비공개 정보는 추정하지 않습니다.
-9) 문장은 짧고 구체적인 한국어로 작성합니다.`,
+9) 국가/지역에 따라 고용·세금·equity 규정이 다릅니다. 공개 자료가 없으면 특정 관할권 규칙을 단정하지 말고 직접 확인 질문으로 남깁니다.
+10) language가 en이면 자유 서술 필드는 영어로 작성하되 schema enum 값은 원래 한국어 enum 토큰을 그대로 사용합니다.
+${language === 'en' ? 'Write concise professional English in all non-enum fields.' : '문장은 짧고 구체적인 한국어로 작성합니다.'}`,
       prompt: `다음 회사에 대해 스타트업 직원 관점의 공개 실사를 수행하세요.
 
 회사명: ${company}
 공식 웹사이트 또는 채용페이지(사용자가 제공한 경우): ${website || '없음'}
 관심 직무(사용자가 제공한 경우): ${role || '없음'}
+국가/지역(사용자가 제공한 경우): ${region || '없음'}
+응답 언어: ${language === 'en' ? 'English (except fixed enum tokens)' : 'Korean'}
 
 최신 공개 웹 자료를 검색해서 5-Lens 중 실제 공개 근거가 있는 신호와 없는 신호를 구분하세요.
 특히 최근 투자/자금조달 발표, 공개된 사업 성과, 채용 페이지의 역할/조직 정보, 리더십 공개 정보, 최근 구조조정·채용동결·조직변경 보도, 제품/시장 변화가 있으면 출처 근거로만 요약하세요.
@@ -85,7 +91,7 @@ export async function POST(req: Request) {
   } catch (error) {
     console.error('Public evidence research failed:', error);
     return Response.json(
-      { error: '공개 자료 검색을 완료하지 못했습니다. 잠시 후 다시 시도해주세요.' },
+      { error: 'Public evidence research could not be completed. Please try again.' },
       { status: 500 },
     );
   }
