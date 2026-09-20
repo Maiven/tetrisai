@@ -744,7 +744,12 @@ export default function GlobalPage() {
                 <h3>Do not rate the startup. Verify the relationship you are about to enter.</h3>
               </div>
               <div className="globalLensGrid">
-                {result.analysis.startupDiligence.map((x, i) => (
+                {(resultDepth === 'essential'
+                  ? [...result.analysis.startupDiligence]
+                      .sort((a, b) => ({ '검증 우선': 0, '정보 부족': 1, '주의': 2, '확인됨': 3 }[a.status] - { '검증 우선': 0, '정보 부족': 1, '주의': 2, '확인됨': 3 }[b.status]))
+                      .slice(0, 3)
+                  : result.analysis.startupDiligence
+                ).map((x, i) => (
                   <article key={x.dimension}>
                     <div className="globalLensTop"><i>{String(i + 1).padStart(2,'0')}</i><b>{DIMENSION[x.dimension]}</b><span>{STATUS[x.status]}</span></div>
                     <p>{x.signal}</p>
