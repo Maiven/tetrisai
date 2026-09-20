@@ -110,6 +110,20 @@ The product can serve adjacent segments, but product learning begins here.
 - Cash & equity
 - Learning & future options
 
+### AX Role Reality overlay
+
+AI transformation is treated as a cross-cutting overlay, not a sixth generic score.
+
+It verifies:
+- actual work redesign
+- delegation depth (NON-AX / information processing / bounded task execution / goal-based planning & execution)
+- individual × organization AI readiness fit
+- retained human judgment / decision rights
+- skill trajectory
+- quality and accountability
+
+The product explicitly avoids converting AI exposure into a layoff probability.
+
 ---
 
 ## 4. Why now
@@ -427,6 +441,8 @@ Implemented:
 - web sources
 - Transparency Ledger (concrete / vague / declined)
 - Candidate Diligence Request
+- privacy-first Candidate Diligence Share Link
+- AX Role Reality / Delegation Depth / AX Fit
 - Evidence Loop
 - ontology-guided prompting
 - typed Decision Graph
