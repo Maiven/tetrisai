@@ -733,3 +733,6 @@ button:not(:disabled):active{transform:translateY(1px)}
 
 .decisionGapActions{display:grid;grid-template-columns:.72fr 1.28fr;gap:7px;margin-top:10px}.decisionGapActions button{border:1px solid #dfe5ec;border-radius:999px;background:#fff;color:#4b5c71;padding:10px 12px;font-size:9px;font-weight:900;cursor:pointer}.decisionGapActions button.primary{border-color:#111923;background:#111923;color:#fff;box-shadow:0 9px 20px rgba(11,18,32,.11)}.decisionGapActions button:hover{transform:translateY(-1px)}
 @media(max-width:720px){.decisionGapActions{grid-template-columns:1fr}}
+
+.globalResponseSignal{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin:6px 0}.globalResponseSignal button{border:1px solid #dfe5ec;background:#fff;color:#7b8999;border-radius:8px;padding:6px 4px;font-size:7px;font-weight:850;cursor:pointer}.globalResponseSignal button.active{background:#eef2f7;color:#33465d;border-color:#dbe3ec}.globalResponseSignal button.active:nth-child(2){background:#e9f6ef;color:#35664f;border-color:#d7eadf}.globalResponseSignal button.active:nth-child(3){background:#fff2e2;color:#895a2d;border-color:#f0dcc3}.globalResponseSignal button.active:nth-child(4){background:#f8e9ee;color:#8b4b5d;border-color:#ead5dc}
+@media(max-width:720px){.globalResponseSignal{grid-template-columns:repeat(2,1fr)}}
