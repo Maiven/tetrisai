@@ -34,7 +34,7 @@ export default function EnglishPrivacyPage() {
       <section>
         <h2>Candidate Diligence Share Links</h2>
         <p>A request link contains only the diligence questions the candidate chooses to share. It does not include the candidate’s original private decision prompt, AI analysis, or full Decision Passport.</p>
-        <p>The current Share Link v1 is stateless: the service does not separately persist the request or response in a server-side database. Instead, the response content is encoded into the return URL itself. <b>Anyone who has that response link can read the answers.</b> Do not put confidential financials, customer information, contract text, source code, or trade secrets into a response.</p>
+        <p>The current Share Link v1 is stateless and does not persist requests or responses in a separate application database. The question/response payload is placed in the URL <b>fragment (#)</b>, rather than the query string, so it is not sent as part of the normal HTTP request URL to the server. However, <b>anyone who has the full link can read the payload, and the link may remain in browser history or the clipboard.</b> Do not put confidential financials, customer information, contract text, source code, or trade secrets into a response.</p>
         <p>The link also does not authenticate the responder’s identity. Imported link responses first enter a “review required” state and are not automatically promoted to verified evidence.</p>
       </section>
 
