@@ -508,6 +508,19 @@ export default function GlobalPage() {
         </div>
       </section>
 
+      <section className="globalCategory">
+        <p className="eyebrow">NEW CATEGORY · CANDIDATE DILIGENCE PROTOCOL</p>
+        <h2>Not more career advice.<br />A standard way to exchange evidence before you accept.</h2>
+        <p>Reviews, compensation benchmarks, AI, and human coaching each solve valuable parts of the problem. Bandaepyeon connects the missing workflow: <b>candidate asks → company responds → response quality is recorded → evidence updates → the decision changes.</b></p>
+        <div className="categoryProtocol globalCategoryProtocol">
+          <div><i>1</i><b>Candidate asks</b><span>Structured diligence request</span></div><em>→</em>
+          <div><i>2</i><b>Company responds</b><span>Concrete, vague, or unavailable</span></div><em>→</em>
+          <div><i>3</i><b>Evidence separates</b><span>Fact vs transparency signal</span></div><em>→</em>
+          <div><i>4</i><b>Decision updates</b><span>Re-diligence before commitment</span></div>
+        </div>
+        <p className="categoryResearch">A 2026 AEJ: Applied Economics field experiment found that giving applicants better startup-quality information materially shifted where they applied, while broader overoptimism about startup success remained. <a href="https://www.aeaweb.org/articles?id=10.1257%2Fapp.20240722" target="_blank" rel="noreferrer">Research ↗</a></p>
+      </section>
+
       {result && (
         <section className="globalResults" ref={resultsRef}>
           <div className="globalResultsInner">
