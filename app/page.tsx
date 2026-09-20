@@ -299,6 +299,37 @@ export default function Home() {
     setEvidenceLoopMessage('질문을 복사했습니다. 실제 담당자·리더·현직자에게 확인해보세요.');
   }
 
+  async function copyExpectationMemo(items: DiligenceItem[], audit: Analysis['sourceAudit']) {
+    const lines = items.map((x) => {
+      const signal = responseSignals[x.dimension] ?? '아직 안 물음';
+      const note = evidenceNotes[x.dimension]?.trim();
+      const docClaims = audit.claims.filter((claim) => claim.dimension === x.dimension).map((claim) => claim.claim);
+      const evidence =
+        signal === '구체적 답변' && note
+          ? `직접 확인: ${note}`
+          : docClaims.length
+            ? `문서상 약속: ${docClaims.join(' / ')}`
+            : signal === '모호한 답변' || signal === '답변 회피'
+              ? `${signal}: 추가 확인 필요${note ? ` · ${note}` : ''}`
+              : '미확인';
+      return `- ${x.dimension}: ${evidence}`;
+    });
+
+    const memo = [
+      '반대편 · 합류 전 기대치 확인 메모',
+      '',
+      '오퍼 수락 전 제가 이해한 역할과 조건을 아래처럼 정리했습니다. 제가 잘못 이해한 부분이 있다면 수정 부탁드립니다.',
+      '',
+      ...lines,
+      '',
+      '이 메모는 법적 계약이 아니라, 입사 후 기대치 차이를 줄이기 위한 확인용 기록입니다.',
+      '합류 후 30일 / 90일 시점에 실제 경험과 비교해 다시 점검합니다.',
+    ].join('\n');
+
+    await navigator.clipboard.writeText(memo);
+    setEvidenceLoopMessage('합류 전 기대치 확인 메모를 복사했습니다.');
+  }
+
   async function copyDiligenceRequest(items: DiligenceItem[]) {
     const rank: Record<DiligenceItem['status'], number> = { '검증 우선': 0, '정보 부족': 1, '주의': 2, '확인됨': 3 };
     const priority = [...items].sort((a, b) => rank[a.status] - rank[b.status]).slice(0, 3);
@@ -763,6 +794,8 @@ export default function Home() {
 
             {result.ontologyGraph && <EvidenceCoverage graph={result.ontologyGraph} />}
 
+            <EvidenceStandard />
+
             <div className="relianceGuardrail">
               <span>AI RELIANCE GUARDRAIL</span>
               <div><b>추천 점수 없음</b><small>AI가 수락/퇴사를 대신 고르지 않습니다.</small></div>
@@ -777,6 +810,14 @@ export default function Home() {
               onNoteChange={updateEvidenceNote}
               onSignalChange={updateResponseSignal}
               onCopyQuestion={copyQuestion}
+            />
+
+            <ExpectationMemo
+              items={result.analysis.startupDiligence}
+              audit={result.analysis.sourceAudit}
+              notes={evidenceNotes}
+              responseSignals={responseSignals}
+              onCopy={() => copyExpectationMemo(result.analysis.startupDiligence, result.analysis.sourceAudit)}
             />
 
             {result.analysis.sourceAudit.present && <SourceAuditPanel audit={result.analysis.sourceAudit} onCopyQuestion={copyQuestion} />}
@@ -1060,6 +1101,82 @@ export default function Home() {
         </div>
       )}
     </main>
+  );
+}
+
+function EvidenceStandard() {
+  return (
+    <details className="evidenceStandard">
+      <summary>
+        <span><b>무엇을 “증거”로 인정할까요?</b><small>AI의 설명보다 출처와 직접 확인을 우선합니다.</small></span>
+        <em>Evidence standard 보기</em>
+      </summary>
+      <div className="evidenceLadder">
+        <div className="tier strong"><span>01</span><b>공식 문서·계약·규제기관 자료</b><small>가장 강함 · 실제 조건과 적용대상 확인 필요</small></div>
+        <div className="tier strong"><span>02</span><b>책임자에게 받은 구체적 답변</b><small>직속리더·채용담당자의 구체적 기준·사례</small></div>
+        <div className="tier"><span>03</span><b>현직자의 구체적 실제 사례</b><small>행동·의사결정 방식 확인에 유용</small></div>
+        <div className="tier"><span>04</span><b>검증 가능한 공개 회사자료</b><small>공식 채용·보도자료·기업 공시 등</small></div>
+        <div className="tier weak"><span>05</span><b>제3자 기사·후기·익명 경험</b><small>맥락 신호 · 단독으로 사실 확정 금지</small></div>
+        <div className="tier ai"><span>—</span><b>AI 추론</b><small>증거가 아닙니다. 무엇을 확인할지 구조화하는 도구입니다.</small></div>
+      </div>
+    </details>
+  );
+}
+
+function ExpectationMemo({
+  items,
+  audit,
+  notes,
+  responseSignals,
+  onCopy,
+}: {
+  items: DiligenceItem[];
+  audit: Analysis['sourceAudit'];
+  notes: Record<string, string>;
+  responseSignals: Record<string, ResponseSignal>;
+  onCopy: () => void;
+}) {
+  return (
+    <article className="expectationMemo">
+      <div className="expectationHead">
+        <div>
+          <p className="panelLabel">EXPECTATION MEMO · BEFORE ACCEPTING</p>
+          <h3>오퍼의 약속을 입사 후 검증할 수 있는 기대치로 남깁니다.</h3>
+          <p>말로 들은 기대와 실제 경험의 차이를 줄이기 위해, 지금 확인된 것과 아직 미확인인 것을 30일·90일 뒤 다시 비교합니다.</p>
+        </div>
+        <button onClick={onCopy}>기대치 확인 메모 복사 →</button>
+      </div>
+      <div className="expectationRows">
+        {items.map((item) => {
+          const signal = responseSignals[item.dimension] ?? '아직 안 물음';
+          const note = notes[item.dimension]?.trim();
+          const claims = audit.claims.filter((claim) => claim.dimension === item.dimension);
+          const state =
+            signal === '구체적 답변'
+              ? '직접 확인'
+              : claims.length
+                ? '문서상 약속'
+                : signal === '모호한 답변' || signal === '답변 회피'
+                  ? '추가 확인'
+                  : '미확인';
+          const content =
+            signal === '구체적 답변' && note
+              ? note
+              : claims.length
+                ? claims.map((claim) => claim.claim).join(' · ')
+                : note || item.missingEvidence;
+          return (
+            <div key={item.dimension}>
+              <span>{item.dimension}</span>
+              <b>{state}</b>
+              <p>{content}</p>
+            </div>
+          );
+        })}
+      </div>
+      <div className="expectationReview"><span>30 DAYS</span><b>역할·리더·실제 권한</b><i>→</i><span>90 DAYS</span><b>성과기준·보상·학습 약속</b></div>
+      <small>법적 계약이 아니라 기대치 확인 메모입니다. 계약·세무·지분 권리는 공식 문서와 전문가 확인이 우선합니다.</small>
+    </article>
   );
 }
 
