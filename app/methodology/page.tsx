@@ -12,6 +12,39 @@ export default function MethodologyPage() {
       <p className="legalLead">반대편은 최신 연구를 “논문을 많이 인용하는 화면”으로 쓰지 않습니다. 연구에서 반복해서 나타나는 문제를 제품 규칙으로 번역합니다: AI 과신을 줄이고, 정보 부족을 숨기지 않고, 실제 질문과 증거 수집으로 이어지게 합니다.</p>
 
       <section>
+        <h2>이 문제가 실제로 존재한다는 근거</h2>
+        <div className="researchCards">
+          <article>
+            <span>INFORMATION FRICTIONS · 2026</span>
+            <b>스타트업에 대한 정보가 달라지면 지원자의 실제 선택도 달라졌습니다.</b>
+            <p>American Economic Journal: Applied Economics에 실린 2026년 연구는 26개 과학기술 스타트업과 구직자를 대상으로 회사 품질에 대한 전문가 정보를 무작위로 보여줬습니다. 정보가 제공된 집단은 더 높은 평가를 받은 스타트업 쪽으로 지원을 재배분했습니다. 그럼에도 참가자들의 스타트업 성공 가능성에 대한 과도한 낙관은 남아, 더 넓은 정보 부족 문제가 있음을 보여줬습니다.</p>
+            <a href="https://www.aeaweb.org/articles?id=10.1257%2Fapp.20240722" target="_blank" rel="noreferrer">American Economic Journal: Applied Economics, 2026 ↗</a>
+          </article>
+
+          <article>
+            <span>REALISTIC JOB PREVIEW</span>
+            <b>솔직한 정보 자체가 조직 선택과 이후 경험에 중요한 신호가 됩니다.</b>
+            <p>52개 연구, 약 17,000명을 포함한 메타분석에서는 realistic job preview가 자발적 이직에 영향을 주는 핵심 메커니즘으로 조직의 솔직함에 대한 인식을 제시했습니다. 그래서 반대편은 답변의 내용뿐 아니라 '구체적 답변 / 모호한 답변 / 답변 회피'를 별도 Transparency Signal로 기록합니다.</p>
+            <a href="https://onlinelibrary.wiley.com/doi/10.1111/j.1744-6570.2011.01230.x" target="_blank" rel="noreferrer">Personnel Psychology meta-analysis ↗</a>
+          </article>
+
+          <article>
+            <span>ALTERNATIVE QUALITY · 2025</span>
+            <b>다른 일자리가 '있는가'보다 그 대안이 실제로 좋은가가 더 중요합니다.</b>
+            <p>2025년 메타분석에서는 perceived alternative quality가 단순한 alternative availability보다 이직 행동을 설명하는 상대적 영향이 거의 세 배 강했습니다. 그래서 반대편은 선택지 개수보다 12개월 뒤 남을 역량·성과·네트워크와 옵션의 질을 비교합니다.</p>
+            <a href="https://www.sciencedirect.com/org/science/article/pii/S0268394625000195" target="_blank" rel="noreferrer">Journal of Managerial Psychology, 2025 ↗</a>
+          </article>
+
+          <article>
+            <span>AI IS NOT THE COUNSELOR · 2026</span>
+            <b>AI는 빠른 정보 제공에는 강하지만 인간의 판단을 대체해서는 안 됩니다.</b>
+            <p>2026년 3주간의 AI 대 인간 커리어 상담 비교연구에서 생성형 AI는 빠른 정보 제공에 강했지만, 인간 상담이 커리어 의사결정 자기효능감과 전체 의사결정 품질에서 더 나은 결과를 보였습니다. 그래서 반대편은 'AI 상담사'가 아니라 증거를 찾고 질문을 만드는 도구로 설계합니다.</p>
+            <a href="https://www.sciencedirect.com/science/article/pii/S0160791X26000904" target="_blank" rel="noreferrer">Technology in Society, 2026 ↗</a>
+          </article>
+        </div>
+      </section>
+
+      <section>
         <h2>Startup 5-Lens</h2>
         <div className="legalGrid">
           <div><b>회사 생존 신호</b><p>투자 단계 자체를 안정성으로 해석하지 않고, 런웨이·다음 조달 조건·사업 마일스톤에서 무엇을 확인할지 봅니다.</p></div>
@@ -212,7 +245,7 @@ export default function MethodologyPage() {
         <p>생성형 AI는 사용자의 자유로운 문맥을 읽고 구조화된 실사 스키마에 맞춰 질문과 반증 조건을 만듭니다. AI는 퇴사·입사 여부를 대신 선택하지 않고, 외부 근거가 없는 회사 생존 확률·AI 자신감 점수·지분 미래가치를 만들어내지 않습니다. 회사 내부의 비공개 사실은 “모름”으로 남기고 실제 사람과 문서에 질문하도록 바꿉니다.</p>
       </section>
 
-      <p className="legalDate">Research notes updated · 2026-09-19</p>
+      <p className="legalDate">Research notes updated · 2026-09-20</p>
     </main>
   );
 }
