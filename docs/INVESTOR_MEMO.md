@@ -29,6 +29,19 @@
 
 문제는 **이 정보와 행동이 하나의 verification workflow로 연결되지 않는 것**이다.
 
+### Direct empirical validation
+
+2026년 *American Economic Journal: Applied Economics*의 "Information Frictions and Employee Sorting between Start-Ups"는 26개 science-based startup과 구직자를 대상으로 회사 science/business quality에 대한 expert rating을 무작위로 노출했다.
+
+정보를 본 지원자는 더 높은 평가를 받은 startup 쪽으로 실제 지원을 재배분했다. 그러나 사후 베팅에서는 startup 성공 가능성에 대한 과도한 낙관이 여전히 남았다.
+
+즉 이 문제는 단순한 '커리어 불안'이 아니다.
+
+> **Startup labor market에는 실제 information friction이 존재하며, 정보가 달라지면 talent allocation도 달라진다.**
+
+Source:
+https://www.aeaweb.org/articles?id=10.1257%2Fapp.20240722
+
 ---
 
 ## 2. Wedge
@@ -53,6 +66,22 @@ The product can serve adjacent segments, but product learning begins here.
 
 ## 3. Product
 
+### Category thesis
+
+**Candidate Diligence Protocol**
+
+`Candidate asks → Company responds → Response quality → Evidence → Re-diligence`
+
+기존 카테고리는 각각 중요한 일부를 해결한다.
+
+- review platform: 다른 직원의 과거 경험
+- compensation benchmark: 시장의 평균
+- equity education: 지분 구조 이해
+- generic AI: 사고 구조화
+- career coach: 인간 상담/전략
+
+반대편의 새 value layer는 이 정보를 대체하는 것이 아니라, **내 오퍼에서 무엇을 확인할지 → 누구에게 물을지 → 회사가 어떻게 답했는지 → 어떤 답을 evidence로 인정할지 → 새 정보로 결론을 다시 계산하는 흐름**을 연결하는 것이다.
+
 ### One-sentence experience
 
 **고민 한 문장 → 아직 모르는 것 발견 → 실제 질문 → 공개 자료 조사 → 증거 확보 → 재실사**
@@ -67,9 +96,11 @@ The product can serve adjacent segments, but product learning begins here.
 6. Flip Conditions
 7. Public Evidence Agent
 8. 10min → 24h → 7d Verification Sprint
-9. Evidence Loop
-10. Decision Passport
-11. Outcome follow-up (next)
+9. Transparency Ledger (concrete / vague / declined)
+10. Candidate Diligence Request
+11. Evidence Loop
+12. Decision Passport
+13. Outcome follow-up (next)
 
 ### 5-Lens
 
@@ -155,10 +186,23 @@ The service checks:
 - every lens has a verification question
 - graph relations reference valid nodes
 
+### Transparency Ledger
+
+Questions do not become evidence merely because the user wrote a note.
+
+The product distinguishes:
+- concrete answer → user-reported verified evidence
+- vague answer → transparency signal
+- declined answer → transparency signal
+- public web information → secondary public-source evidence
+- no answer yet → unresolved unknown
+
+A vague or declined response is **not** interpreted as proof that a company is bad. It means the information gap remains open and should be handled with a safer follow-up question or official documentation.
+
 ### Evidence Loop
 
 The model's first answer is not treated as final.
-Real-world answers and public evidence re-enter the graph and trigger a new analysis.
+Real-world answers, response quality, and public evidence re-enter the decision workflow and trigger a new analysis.
 
 ---
 
@@ -172,7 +216,8 @@ Its measurable value is:
 2. create specific verification questions
 3. get the user to execute at least one verification action
 4. convert unknowns into evidence
-5. update the decision when new evidence arrives
+5. distinguish evidence from response friction
+6. update the decision when new evidence arrives
 
 ---
 
@@ -188,6 +233,9 @@ Supporting metrics:
 - Time to First Useful Question
 - Question Copy Rate
 - Public Evidence Search Rate
+- Candidate Diligence Request Copy Rate
+- Concrete Answer Rate
+- Transparency Friction Rate
 - Evidence Action Rate
 - 7-Day Decision Revisit Rate
 - Unknown → Verified Conversion
@@ -264,6 +312,8 @@ The viral object is not
 
 It is:
 **"These are the 3 questions that could change my decision."**
+
+A second distribution object is the **Candidate Diligence Request**: a professional, non-accusatory request that a candidate can send to a recruiter or hiring manager.
 
 ---
 
@@ -375,6 +425,8 @@ Implemented:
 - source audit for sanitized job/offer excerpts
 - live Public Evidence Agent
 - web sources
+- Transparency Ledger (concrete / vague / declined)
+- Candidate Diligence Request
 - Evidence Loop
 - ontology-guided prompting
 - typed Decision Graph
