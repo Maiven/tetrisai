@@ -26,6 +26,8 @@ type Analysis = {
   axAudit: {
     exposureMode: '증강 중심' | '자동화 중심' | '혼합' | '정보 부족';
     exposureNote: string;
+    delegationLevel: 'NON_AX' | 'LEVEL 1 정보 처리 위임' | 'LEVEL 2 업무 수행 위임' | 'LEVEL 3 목표 기반 계획·수행 위임' | '정보 부족';
+    delegationNote: string;
     items: {
       area: '업무 재설계' | '조직 준비도' | '인간 판단·권한' | '역량 궤적' | '품질·책임';
       status: '확인됨' | '주의' | '정보 부족' | '검증 우선';
@@ -1354,6 +1356,11 @@ function AXRoleAudit({
           <p>{audit.exposureNote}</p>
         </div>
         <span className={`axMode ax-${statusClass(audit.exposureMode)}`}>{audit.exposureMode}</span>
+      </div>
+
+      <div className="axDelegation">
+        <div><span>DELEGATION DEPTH</span><b>{audit.delegationLevel}</b></div>
+        <p>{audit.delegationNote}</p>
       </div>
 
       <div className="axFit">
