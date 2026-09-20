@@ -827,6 +827,8 @@ export default function Home() {
               onCopy={() => copyExpectationMemo(result.analysis.startupDiligence, result.analysis.sourceAudit)}
             />
 
+            <KoreaOfficialGuide />
+
             {result.analysis.sourceAudit.present && <SourceAuditPanel audit={result.analysis.sourceAudit} onCopyQuestion={copyQuestion} />}
 
             <PublicEvidenceLab
@@ -1108,6 +1110,23 @@ export default function Home() {
         </div>
       )}
     </main>
+  );
+}
+
+function KoreaOfficialGuide() {
+  return (
+    <article className="officialSourceGuide">
+      <div>
+        <p className="panelLabel">OFFICIAL VERIFICATION · KOREA</p>
+        <h3>한국 스타트업 오퍼라면 공식 법령과 부여 문서를 먼저 확인하세요.</h3>
+        <p>벤처기업 주식매수선택권에는 법정 구조가 있지만, 내 오퍼의 실제 경제적 의미는 부여계약·행사가격·베스팅·퇴사 후 행사조건 등 회사별 문서에서 확인해야 합니다.</p>
+      </div>
+      <div className="officialLinks">
+        <a href="https://www.law.go.kr/lsInfoP.do?lsiSeq=271307" target="_blank" rel="noreferrer">국가법령정보센터 · 벤처기업법 제16조의3 ↗</a>
+        <a href="https://www.mss.go.kr/site/smba/ex/bbs/View.do?bcIdx=1064346&cbIdx=86" target="_blank" rel="noreferrer">중소벤처기업부 · 벤처기업 실태조사 ↗</a>
+      </div>
+      <small>법률·세무 자문이 아닙니다. 실제 적용은 최신 법령, 회사의 공식 부여 문서, 전문가 확인이 우선합니다.</small>
+    </article>
   );
 }
 
