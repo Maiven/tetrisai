@@ -228,6 +228,11 @@ const QUICK_STARTS = [
     meta: 'EQUITY',
     question: 'A startup offered me stock options. What terms and real-world facts should I verify before I treat the equity as meaningful compensation?',
   },
+  {
+    label: 'AI is changing the role',
+    meta: 'AX',
+    question: 'The company describes itself as AI-first and says agents are changing how the team works. Before I join, what should I verify about my real tasks, decision rights, skills, quality standards, and accountability?',
+  },
 ];
 
 const defaultContext: Context = {
