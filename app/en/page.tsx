@@ -132,6 +132,40 @@ const PUBLIC_LEVEL: Record<PublicResearch['research']['signals'][number]['eviden
   '충돌': 'Conflicting sources',
 };
 
+const OFFICIAL_GUIDES: Record<string, { title: string; note: string; links: { label: string; url: string }[] }> = {
+  'United States': {
+    title: 'U.S. equity & role verification',
+    note: 'Rule 701 may affect disclosures for private-company compensatory securities. Verify whether it applies to your grant and use official plan documents.',
+    links: [
+      { label: 'SEC · Rule 701', url: 'https://www.sec.gov/resources-small-businesses/exempt-offerings/employee-benefit-plans-rule-701-0' },
+      { label: 'U.S. Department of Labor · O*NET', url: 'https://www.dol.gov/agencies/eta/onet' },
+    ],
+  },
+  'United Kingdom': {
+    title: 'UK equity verification',
+    note: 'If the offer references EMI, verify the actual scheme and current HMRC rules rather than importing U.S. option assumptions.',
+    links: [
+      { label: 'HMRC · Enterprise Management Incentives', url: 'https://www.gov.uk/tax-employee-share-schemes/enterprise-management-incentives-emis' },
+    ],
+  },
+  'European Union': {
+    title: 'EU pay-transparency verification',
+    note: 'EU rules create pre-employment pay-transparency rights, but national implementation details still matter. Verify the law in the country where you are applying.',
+    links: [
+      { label: 'EUR-Lex · Directive (EU) 2023/970', url: 'https://eur-lex.europa.eu/eli/dir/2023/970/oj/eng' },
+      { label: 'European Commission · 2026 explainer', url: 'https://commission.europa.eu/news-and-media/news/new-eu-rules-pay-transparency-explained-2026-06-05_en' },
+    ],
+  },
+  'Korea': {
+    title: 'Korea venture-equity verification',
+    note: 'Korean venture-company stock options have statutory rules, while the economic meaning of your own grant still depends on the company plan and grant terms.',
+    links: [
+      { label: 'Korea Law · Venture Business Act, Article 16-3', url: 'https://www.law.go.kr/lsInfoP.do?lsiSeq=271307' },
+      { label: 'MSS · Venture company survey', url: 'https://www.mss.go.kr/site/smba/ex/bbs/View.do?bcIdx=1064346&cbIdx=86' },
+    ],
+  },
+};
+
 const REGIONS = [
   'Not specified',
   'United States',
@@ -363,6 +397,38 @@ export default function GlobalPage() {
     await navigator.clipboard.writeText(text);
   }
 
+  async function copyExpectationMemo(items: DiligenceItem[], audit: Analysis['sourceAudit']) {
+    const lines = items.map((x) => {
+      const signal = responseSignals[x.dimension] ?? 'not_asked';
+      const note = evidenceNotes[x.dimension]?.trim();
+      const claims = audit.claims.filter((claim) => claim.dimension === x.dimension).map((claim) => claim.claim);
+      const evidence =
+        signal === 'concrete' && note
+          ? `directly verified: ${note}`
+          : claims.length
+            ? `documented promise: ${claims.join(' / ')}`
+            : signal === 'vague'
+              ? `vague answer — follow-up required${note ? ` · ${note}` : ''}`
+              : signal === 'declined'
+                ? `answer unavailable/declined — verify via another source${note ? ` · ${note}` : ''}`
+                : 'unresolved';
+      return `- ${DIMENSION[x.dimension]}: ${evidence}`;
+    });
+
+    const memo = [
+      'Bandaepyeon · Pre-acceptance Expectation Memo',
+      '',
+      'Before I accept, this is my current understanding of the role and terms. Please correct anything I have misunderstood.',
+      '',
+      ...lines,
+      '',
+      'This is not a legal contract. It is a written expectation check to reduce avoidable gaps after joining.',
+      'Revisit at 30 and 90 days against actual experience.',
+    ].join('\n');
+
+    await navigator.clipboard.writeText(memo);
+  }
+
   async function copyDiligenceRequest(items: DiligenceItem[]) {
     const rank: Record<DiligenceItem['status'], number> = { '검증 우선': 0, '정보 부족': 1, '주의': 2, '확인됨': 3 };
     const top = [...items].sort((a, b) => rank[a.status] - rank[b.status]).slice(0, 3);
@@ -535,6 +601,8 @@ export default function GlobalPage() {
 
             <GlobalDecisionGap items={result.analysis.startupDiligence} onCopyPack={copyQuestionPack} onCopyRequest={copyDiligenceRequest} />
 
+            <GlobalEvidenceStandard />
+
             <div className="globalNextRow">
               <article><span>NEXT CHECK</span><b>{result.analysis.decisionCard.nextCheck}</b></article>
               <article><span>FIRST 10 MINUTES</span><b>{result.analysis.verificationSprint[0]?.action}</b></article>
@@ -593,6 +661,14 @@ export default function GlobalPage() {
               </div>
             </section>
 
+            <GlobalExpectationMemo
+              items={result.analysis.startupDiligence}
+              audit={result.analysis.sourceAudit}
+              notes={evidenceNotes}
+              responseSignals={responseSignals}
+              onCopy={() => copyExpectationMemo(result.analysis.startupDiligence, result.analysis.sourceAudit)}
+            />
+
             {result.analysis.sourceAudit.present && (
               <section className="globalAudit">
                 <div className="globalSectionHead"><span>SOURCE AUDIT</span><h3>What the document promises — and what reality still needs to prove.</h3></div>
@@ -631,6 +707,8 @@ export default function GlobalPage() {
               onSearch={researchPublicEvidence}
               onApply={() => analyze(question, [], publicEvidencePayload())}
             />
+
+            <OfficialSourceGuide region={context.region} />
 
             <section className="globalFlipSection">
               <div className="globalSectionHead"><span>FLIP CONDITIONS</span><h3>Decide what evidence would make you change your mind — before you see it.</h3></div>
@@ -692,6 +770,100 @@ export default function GlobalPage() {
         </div>
       )}
     </main>
+  );
+}
+
+function GlobalEvidenceStandard() {
+  return (
+    <details className="evidenceStandard globalEvidenceStandard">
+      <summary>
+        <span><b>What counts as evidence?</b><small>AI output is not evidence. Provenance matters.</small></span>
+        <em>Evidence standard</em>
+      </summary>
+      <div className="evidenceLadder">
+        <div className="tier strong"><span>01</span><b>Official plan / contract / regulator</b><small>Strongest starting point; applicability still matters.</small></div>
+        <div className="tier strong"><span>02</span><b>Concrete answer from accountable owner</b><small>Specific criteria, numbers, examples, or documented terms.</small></div>
+        <div className="tier"><span>03</span><b>Concrete current-employee example</b><small>Useful for real behavior and decision-rights evidence.</small></div>
+        <div className="tier"><span>04</span><b>Verifiable company public source</b><small>Careers page, official release, filing, or company documentation.</small></div>
+        <div className="tier weak"><span>05</span><b>Third-party article / anonymous review</b><small>Context signal, not standalone proof.</small></div>
+        <div className="tier ai"><span>—</span><b>AI inference</b><small>Never evidence. It only helps structure what to verify.</small></div>
+      </div>
+    </details>
+  );
+}
+
+function GlobalExpectationMemo({
+  items,
+  audit,
+  notes,
+  responseSignals,
+  onCopy,
+}: {
+  items: DiligenceItem[];
+  audit: Analysis['sourceAudit'];
+  notes: Record<string, string>;
+  responseSignals: Record<string, GlobalResponseSignal>;
+  onCopy: () => void;
+}) {
+  return (
+    <article className="expectationMemo globalExpectationMemo">
+      <div className="expectationHead">
+        <div>
+          <p className="panelLabel">EXPECTATION MEMO · BEFORE ACCEPTING</p>
+          <h3>Turn offer promises into expectations you can review after joining.</h3>
+          <p>Capture what is verified, what is only documented, and what is unresolved. Revisit the memo at day 30 and day 90.</p>
+        </div>
+        <button onClick={onCopy}>Copy expectation memo →</button>
+      </div>
+      <div className="expectationRows">
+        {items.map((item) => {
+          const signal = responseSignals[item.dimension] ?? 'not_asked';
+          const note = notes[item.dimension]?.trim();
+          const claims = audit.claims.filter((claim) => claim.dimension === item.dimension);
+          const state =
+            signal === 'concrete'
+              ? 'Directly verified'
+              : claims.length
+                ? 'Documented promise'
+                : signal === 'vague' || signal === 'declined'
+                  ? 'Follow-up needed'
+                  : 'Unresolved';
+          const content =
+            signal === 'concrete' && note
+              ? note
+              : claims.length
+                ? claims.map((claim) => claim.claim).join(' · ')
+                : note || item.missingEvidence;
+          return (
+            <div key={item.dimension}>
+              <span>{DIMENSION[item.dimension]}</span>
+              <b>{state}</b>
+              <p>{content}</p>
+            </div>
+          );
+        })}
+      </div>
+      <div className="expectationReview"><span>DAY 30</span><b>Role · manager · decision rights</b><i>→</i><span>DAY 90</span><b>Outcomes · compensation · learning</b></div>
+      <small>This is not a legal contract. Official documents and qualified local professionals control regulated questions.</small>
+    </article>
+  );
+}
+
+function OfficialSourceGuide({ region }: { region: string }) {
+  const guide = OFFICIAL_GUIDES[region];
+  if (!guide) return null;
+  return (
+    <article className="officialSourceGuide">
+      <div>
+        <p className="panelLabel">OFFICIAL VERIFICATION STARTING POINTS</p>
+        <h3>{guide.title}</h3>
+        <p>{guide.note}</p>
+      </div>
+      <div className="officialLinks">
+        {guide.links.map((link) => <a key={link.url} href={link.url} target="_blank" rel="noreferrer">{link.label} ↗</a>)}
+      </div>
+      <small>Reference links are a starting point, not individualized legal or tax advice. Verify current applicability in your jurisdiction.</small>
+    </article>
   );
 }
 
