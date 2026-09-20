@@ -12,6 +12,30 @@ export default function EnglishMethodologyPage() {
       <p className="legalLead">Bandaepyeon is designed to make uncertainty inspectable. AI structures the decision; reality still has to supply the evidence.</p>
 
       <section>
+        <h2>Why this problem is real</h2>
+        <div className="researchCards">
+          <article>
+            <span>STARTUP INFORMATION FRICTIONS · 2026</span>
+            <b>Better information changed where job seekers actually applied.</b>
+            <p>A 2026 American Economic Journal: Applied Economics study worked with 26 science-based startups and randomized whether applicants saw expert quality ratings. Showing better information shifted applications toward higher-rated firms, while overly optimistic beliefs about startup success still persisted.</p>
+            <a href="https://www.aeaweb.org/articles?id=10.1257%2Fapp.20240722" target="_blank" rel="noreferrer">AEJ: Applied Economics, 2026 ↗</a>
+          </article>
+          <article>
+            <span>ORGANIZATIONAL HONESTY</span>
+            <b>How a company answers can itself be informative.</b>
+            <p>A meta-analysis covering roughly 17,000 participants identified perceived organizational honesty as a primary mechanism linking realistic job previews with voluntary turnover. This motivates Bandaepyeon's separate Transparency Ledger for concrete, vague, and declined answers.</p>
+            <a href="https://onlinelibrary.wiley.com/doi/10.1111/j.1744-6570.2011.01230.x" target="_blank" rel="noreferrer">Personnel Psychology meta-analysis ↗</a>
+          </article>
+          <article>
+            <span>AI ≠ CAREER COUNSELOR · 2026</span>
+            <b>AI should structure evidence, not replace human judgment.</b>
+            <p>A three-week 2026 comparison found generative AI strong at rapid information delivery, while human counseling performed better on career decision self-efficacy and overall decision quality. Bandaepyeon therefore uses AI to structure unknowns and actions rather than to choose for the user.</p>
+            <a href="https://www.sciencedirect.com/science/article/pii/S0160791X26000904" target="_blank" rel="noreferrer">Technology in Society, 2026 ↗</a>
+          </article>
+        </div>
+      </section>
+
+      <section>
         <h2>The global 5-Lens model</h2>
         <div className="legalGrid">
           <div><b>Company viability</b><p>What can be publicly or directly verified about financing milestones, operating signals, and what must still be asked.</p></div>
