@@ -32,6 +32,13 @@ export default function EnglishPrivacyPage() {
       </section>
 
       <section>
+        <h2>Candidate Diligence Share Links</h2>
+        <p>A request link contains only the diligence questions the candidate chooses to share. It does not include the candidate’s original private decision prompt, AI analysis, or full Decision Passport.</p>
+        <p>The current Share Link v1 is stateless: the service does not separately persist the request or response in a server-side database. Instead, the response content is encoded into the return URL itself. <b>Anyone who has that response link can read the answers.</b> Do not put confidential financials, customer information, contract text, source code, or trade secrets into a response.</p>
+        <p>The link also does not authenticate the responder’s identity. Imported link responses first enter a “review required” state and are not automatically promoted to verified evidence.</p>
+      </section>
+
+      <section>
         <h2>Decision Passport</h2>
         <p>If you choose to save a Decision Passport in the current product, it is stored in your browser's local storage. You can remove it from the product UI or by clearing browser storage. Cloud history should only be introduced with explicit opt-in and clear deletion/export controls.</p>
       </section>
@@ -41,7 +48,7 @@ export default function EnglishPrivacyPage() {
         <p>Employment, equity, securities, and tax rules vary by country and sometimes by where you work versus where the company is incorporated. Bandaepyeon does not replace qualified local legal, tax, or financial advice.</p>
       </section>
 
-      <p className="legalDate">Global privacy note · 2026-09-19</p>
+      <p className="legalDate">Global privacy note · 2026-09-20</p>
     </main>
   );
 }
