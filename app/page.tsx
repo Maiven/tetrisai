@@ -299,6 +299,21 @@ export default function Home() {
     setEvidenceLoopMessage('질문을 복사했습니다. 실제 담당자·리더·현직자에게 확인해보세요.');
   }
 
+  async function copyDiligenceRequest(items: DiligenceItem[]) {
+    const rank: Record<DiligenceItem['status'], number> = { '검증 우선': 0, '정보 부족': 1, '주의': 2, '확인됨': 3 };
+    const priority = [...items].sort((a, b) => rank[a.status] - rank[b.status]).slice(0, 3);
+    const request = [
+      '안녕하세요. 오퍼(또는 역할)를 검토하면서 입사 후 기대치와 조건을 정확히 이해하고 싶어 몇 가지 확인드립니다.',
+      '',
+      ...priority.map((x, i) => `${i + 1}. ${x.questionToAsk}`),
+      '',
+      '민감한 내부정보를 요청드리려는 목적은 아니며, 공개·공유 가능한 범위에서 구체적인 기준이나 사례를 알려주시면 결정에 큰 도움이 될 것 같습니다.',
+      '감사합니다.',
+    ].join('\n');
+    await navigator.clipboard.writeText(request);
+    setEvidenceLoopMessage('채용담당자·리더에게 보낼 수 있는 실사 요청문을 복사했습니다.');
+  }
+
   async function copyQuestionPack(items: DiligenceItem[]) {
     const priority = [...items]
       .sort((a, b) => {
@@ -716,7 +731,7 @@ export default function Home() {
               <div className="reframe"><span>다시 정의한 진짜 질문</span><p>{result.analysis.realQuestion}</p></div>
             </article>
 
-            <DecisionGap items={result.analysis.startupDiligence} onCopyPack={copyQuestionPack} />
+            <DecisionGap items={result.analysis.startupDiligence} onCopyPack={copyQuestionPack} onCopyRequest={copyDiligenceRequest} />
 
             <div className="activationBrief">
               <div><span>NEXT CHECK</span><b>{result.analysis.decisionCard.nextCheck}</b></div>
@@ -1029,9 +1044,11 @@ export default function Home() {
 function DecisionGap({
   items,
   onCopyPack,
+  onCopyRequest,
 }: {
   items: DiligenceItem[];
   onCopyPack: (items: DiligenceItem[]) => void;
+  onCopyRequest: (items: DiligenceItem[]) => void;
 }) {
   const ranked = [...items].sort((a, b) => {
     const rank: Record<DiligenceItem['status'], number> = { '검증 우선': 0, '정보 부족': 1, '주의': 2, '확인됨': 3 };
@@ -1056,7 +1073,10 @@ function DecisionGap({
           </div>
         ))}
       </div>
-      <button onClick={() => onCopyPack(items)}>오늘 물어볼 질문 3개 한 번에 복사 →</button>
+      <div className="decisionGapActions">
+        <button onClick={() => onCopyPack(items)}>질문 3개만 복사</button>
+        <button className="primary" onClick={() => onCopyRequest(items)}>보내기 좋은 실사 요청문으로 복사 →</button>
+      </div>
     </article>
   );
 }
