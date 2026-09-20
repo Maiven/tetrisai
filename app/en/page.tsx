@@ -263,6 +263,7 @@ export default function GlobalPage() {
   const [publicLoading, setPublicLoading] = useState(false);
   const [publicError, setPublicError] = useState('');
   const [saved, setSaved] = useState(false);
+  const [resultDepth, setResultDepth] = useState<'essential' | 'full'>('essential');
   const resultsRef = useRef<HTMLElement | null>(null);
 
   const evidenceCount = useMemo(
@@ -696,7 +697,7 @@ export default function GlobalPage() {
       </section>
 
       {result && (
-        <section className="globalResults" ref={resultsRef}>
+        <section className={`globalResults depth-${resultDepth}`} ref={resultsRef}>
           <div className="globalResultsInner">
             <header className="globalResultHeader">
               <div>
@@ -704,8 +705,19 @@ export default function GlobalPage() {
                 <h2>What you still need to know.</h2>
                 <p>{result.analysis.realQuestion}</p>
               </div>
-              <button onClick={() => { setResult(null); setPreviousResult(null); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>New decision</button>
+              <div className="globalHeaderActions">
+                <div className="depthToggle" role="group" aria-label="Result detail level">
+                  <button className={resultDepth === 'essential' ? 'active' : ''} onClick={() => setResultDepth('essential')}>Recommended</button>
+                  <button className={resultDepth === 'full' ? 'active' : ''} onClick={() => setResultDepth('full')}>Full diligence</button>
+                </div>
+                <button className="newDecisionButton" onClick={() => { setResult(null); setPreviousResult(null); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>New decision</button>
+              </div>
             </header>
+
+            <div className="focusRail globalFocusRail" aria-label="Recommended diligence flow">
+              <span>DO ONLY THREE THINGS NOW</span>
+              <b>1 · Send 3 questions</b><i>→</i><b>2 · Classify the response</b><i>→</i><b>3 · Re-diligence with evidence</b>
+            </div>
 
             <GlobalDecisionGap
               items={result.analysis.startupDiligence}
@@ -732,7 +744,12 @@ export default function GlobalPage() {
                 <h3>Do not rate the startup. Verify the relationship you are about to enter.</h3>
               </div>
               <div className="globalLensGrid">
-                {result.analysis.startupDiligence.map((x, i) => (
+                {(resultDepth === 'essential'
+                  ? [...result.analysis.startupDiligence]
+                      .sort((a, b) => ({ '검증 우선': 0, '정보 부족': 1, '주의': 2, '확인됨': 3 }[a.status] - { '검증 우선': 0, '정보 부족': 1, '주의': 2, '확인됨': 3 }[b.status]))
+                      .slice(0, 3)
+                  : result.analysis.startupDiligence
+                ).map((x, i) => (
                   <article key={x.dimension}>
                     <div className="globalLensTop"><i>{String(i + 1).padStart(2,'0')}</i><b>{DIMENSION[x.dimension]}</b><span>{STATUS[x.status]}</span></div>
                     <p>{x.signal}</p>
