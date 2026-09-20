@@ -743,3 +743,5 @@ button:not(:disabled):active{transform:translateY(1px)}
 
 .globalCategory{max-width:1120px;margin:0 auto;padding:24px 25px 105px}.globalCategory h2{font-family:"Iowan Old Style","Palatino Linotype",Georgia,serif;font-size:clamp(40px,4.1vw,56px);line-height:1.12;letter-spacing:-.05em;margin:12px 0 18px}.globalCategory>p:not(.eyebrow):not(.categoryResearch){max-width:840px;font-size:13px;line-height:1.75;color:#667487}.globalCategoryProtocol{margin-top:22px}
 @media(max-width:720px){.globalCategory{padding:20px 15px 80px}}
+
+.onto-user_reported_response{background:#f6ecdd;color:#8a6034}
