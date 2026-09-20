@@ -928,7 +928,11 @@ export default function Home() {
             </div>
 
             <StartupDiligence
-              items={result.analysis.startupDiligence}
+              items={resultDepth === 'essential'
+                ? [...result.analysis.startupDiligence]
+                    .sort((a, b) => ({ '검증 우선': 0, '정보 부족': 1, '주의': 2, '확인됨': 3 }[a.status] - { '검증 우선': 0, '정보 부족': 1, '주의': 2, '확인됨': 3 }[b.status]))
+                    .slice(0, 3)
+                : result.analysis.startupDiligence}
               notes={evidenceNotes}
               responseSignals={responseSignals}
               onNoteChange={updateEvidenceNote}
