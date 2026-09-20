@@ -436,7 +436,7 @@ export async function POST(req: Request) {
     language = body?.language === 'en' ? 'en' : 'ko';
 
     if (body?.sample === true) {
-      const graph = buildDecisionGraph(SAMPLE_ANALYSIS, question || SAMPLE_ANALYSIS.reframedDecision, [], []);
+      const graph = buildDecisionGraph(SAMPLE_ANALYSIS, question || SAMPLE_ANALYSIS.reframedDecision, [], [], []);
       return Response.json(
         {
           mode: 'sample',
@@ -554,7 +554,7 @@ ${sourceExcerpt || '제공 없음'}
 응답 언어: ${language === 'en' ? 'English (except fixed schema enum tokens)' : 'Korean'}`,
     });
 
-    const ontologyGraph = buildDecisionGraph(result.output, question, verifiedEvidence, publicEvidence);
+    const ontologyGraph = buildDecisionGraph(result.output, question, verifiedEvidence, publicEvidence, transparencySignals);
 
     return Response.json(
       {
@@ -570,7 +570,7 @@ ${sourceExcerpt || '제공 없음'}
   } catch (error) {
     console.error('AI analysis failed:', error);
     const fallbackAnalysis = language === 'en' ? fallbackEnglish(question) : fallback(question);
-    const fallbackGraph = buildDecisionGraph(fallbackAnalysis, question || fallbackAnalysis.reframedDecision, [], publicEvidence);
+    const fallbackGraph = buildDecisionGraph(fallbackAnalysis, question || fallbackAnalysis.reframedDecision, [], publicEvidence, transparencySignals);
     return Response.json(
       {
         mode: 'fallback',
