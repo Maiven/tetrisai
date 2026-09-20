@@ -1,6 +1,7 @@
 'use client';
 
 import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
+import { decodeDiligencePayload, encodeDiligencePayload, type DiligenceResponsePayload } from '@/lib/diligence-share';
 
 type Future = { title: string; description: string; upside: string; downside: string };
 type Premortem = { step: string; earlySignal: string };
@@ -87,7 +88,7 @@ type PublicEvidenceResult = {
   note: string;
 };
 
-type ResponseSignal = '아직 안 물음' | '구체적 답변' | '모호한 답변' | '답변 회피';
+type ResponseSignal = '아직 안 물음' | '구체적 답변' | '모호한 답변' | '답변 회피' | '링크 응답·확인 필요';
 
 type SavedPassport = {
   id: string;
@@ -157,6 +158,7 @@ export default function Home() {
   const [evidenceNotes, setEvidenceNotes] = useState<Record<string, string>>({});
   const [responseSignals, setResponseSignals] = useState<Record<string, ResponseSignal>>({});
   const [evidenceLoopMessage, setEvidenceLoopMessage] = useState('');
+  const [importedResponseCount, setImportedResponseCount] = useState(0);
   const [reflection, setReflection] = useState('');
   const [publicCompany, setPublicCompany] = useState('');
   const [publicWebsite, setPublicWebsite] = useState('');
@@ -177,6 +179,10 @@ export default function Home() {
     () => Object.values(responseSignals).filter((x) => x === '모호한 답변' || x === '답변 회피').length,
     [responseSignals],
   );
+  const pendingResponseCount = useMemo(
+    () => Object.values(responseSignals).filter((x) => x === '링크 응답·확인 필요').length,
+    [responseSignals],
+  );
 
   useEffect(() => {
     try {
@@ -185,6 +191,40 @@ export default function Home() {
     } catch {
       // local-only convenience; ignore corrupted storage
     }
+  }, []);
+
+  useEffect(() => {
+    const token = new URLSearchParams(window.location.search).get('response');
+    if (!token) return;
+    const decoded = decodeDiligencePayload(token);
+    if (!decoded || decoded.type !== 'response' || decoded.returnPath !== '/') return;
+
+    const roleLabel: Record<DiligenceResponsePayload['responderRole'], string> = {
+      recruiter: '채용담당자/People',
+      hiring_manager: '직속리더',
+      current_employee: '현직자',
+      other: '기타 응답자',
+    };
+
+    const notes: Record<string, string> = {};
+    const signals: Record<string, ResponseSignal> = {};
+    decoded.answers.forEach((answer) => {
+      const statusLabel =
+        answer.status === 'concrete' ? '구체적 답변으로 표시됨' :
+        answer.status === 'vague' ? '일부/모호한 답변으로 표시됨' :
+        '공유 어려움/답변 불가로 표시됨';
+      notes[answer.dimension] = `[${roleLabel[decoded.responderRole]} · ${statusLabel}] ${answer.answer || '추가 내용 없음'}`;
+      signals[answer.dimension] = '링크 응답·확인 필요';
+    });
+
+    setEvidenceNotes((prev) => ({ ...prev, ...notes }));
+    setResponseSignals((prev) => ({ ...prev, ...signals }));
+    setImportedResponseCount(decoded.answers.length);
+    setEvidenceLoopMessage(`외부 응답 ${decoded.answers.length}개를 가져왔습니다. 링크는 응답자 신원을 인증하지 않으므로 내용을 확인한 뒤 각 Lens의 답변 상태를 직접 분류해주세요.`);
+
+    const cleanUrl = new URL(window.location.href);
+    cleanUrl.searchParams.delete('response');
+    window.history.replaceState({}, '', `${cleanUrl.pathname}${cleanUrl.search}${cleanUrl.hash}`);
   }, []);
 
   function publicEvidencePayload(source = publicResearch): string[] {
@@ -279,10 +319,11 @@ export default function Home() {
       });
 
     const transparencySignals = Object.entries(responseSignals)
-      .filter(([, signal]) => signal === '모호한 답변' || signal === '답변 회피')
+      .filter(([, signal]) => signal === '모호한 답변' || signal === '답변 회피' || signal === '링크 응답·확인 필요')
       .map(([dimension, signal]) => {
         const note = evidenceNotes[dimension]?.trim();
-        return `${dimension}: ${signal}${note ? ` · ${note}` : ''}`;
+        const suffix = signal === '링크 응답·확인 필요' ? ' (외부 응답 링크 · 신원/정확성 미확인)' : '';
+        return `${dimension}: ${signal}${suffix}${note ? ` · ${note}` : ''}`;
       });
 
     for (const [dimension, note] of Object.entries(evidenceNotes)) {
@@ -334,6 +375,26 @@ export default function Home() {
 
     await navigator.clipboard.writeText(memo);
     setEvidenceLoopMessage('합류 전 기대치 확인 메모를 복사했습니다.');
+  }
+
+  async function createDiligenceShareLink(items: DiligenceItem[]) {
+    const rank: Record<DiligenceItem['status'], number> = { '검증 우선': 0, '정보 부족': 1, '주의': 2, '확인됨': 3 };
+    const priority = [...items].sort((a, b) => rank[a.status] - rank[b.status]).slice(0, 3);
+    const requestId = typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : String(Date.now());
+    const payload = {
+      v: 1 as const,
+      type: 'request' as const,
+      requestId,
+      locale: 'ko' as const,
+      createdAt: new Date().toISOString(),
+      expiresAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
+      returnPath: '/' as const,
+      questions: priority.map((x) => ({ dimension: x.dimension, question: x.questionToAsk, askWho: x.askWho })),
+    };
+    savePassport();
+    const link = `${window.location.origin}/request?payload=${encodeDiligencePayload(payload)}`;
+    await navigator.clipboard.writeText(link);
+    setEvidenceLoopMessage('회사에 보낼 실사 링크를 복사했습니다. 링크에는 질문 3개만 포함되고, 개인 고민·AI 분석은 포함되지 않습니다.');
   }
 
   async function copyDiligenceRequest(items: DiligenceItem[]) {
@@ -521,6 +582,12 @@ export default function Home() {
               </div>
             )}
             {passportMessage && <p className="passportMessage">{passportMessage}</p>}
+            {importedResponseCount > 0 && (
+              <div className="importedResponseBanner">
+                <div><span>EXTERNAL RESPONSE IMPORTED</span><b>회사 측 응답 {importedResponseCount}개를 가져왔습니다.</b><small>응답자 신원은 인증되지 않았습니다. 내용을 확인하고 증거 수준을 직접 분류하세요.</small></div>
+                <button onClick={() => passport ? restorePassport() : document.getElementById('decision-input')?.focus()}>응답 검토하기 →</button>
+              </div>
+            )}
 
             <div className="activationRail" aria-label="반대편 이용 순서">
               <div><i>1</i><span><b>고민 한 문장</b><small>회사명 없이 익명으로</small></span></div>
@@ -794,7 +861,12 @@ export default function Home() {
               <div className="reframe"><span>다시 정의한 진짜 질문</span><p>{result.analysis.realQuestion}</p></div>
             </article>
 
-            <DecisionGap items={result.analysis.startupDiligence} onCopyPack={copyQuestionPack} onCopyRequest={copyDiligenceRequest} />
+            <DecisionGap
+              items={result.analysis.startupDiligence}
+              onCopyPack={copyQuestionPack}
+              onCopyRequest={copyDiligenceRequest}
+              onCreateShare={createDiligenceShareLink}
+            />
 
             {previousResult && <DecisionDelta before={previousResult.analysis} after={result.analysis} />}
 
@@ -871,9 +943,9 @@ export default function Home() {
               </div>
               <div className="evidenceProgress">
                 <div><strong>{evidenceCount}</strong><span>/ 5 verified</span></div>
-                <small>구체적 답변 · 마찰 신호 {frictionCount}</small>
+                <small>구체적 답변 {evidenceCount} · 마찰 신호 {frictionCount} · 확인 대기 {pendingResponseCount}</small>
               </div>
-              <button disabled={loading || (evidenceCount === 0 && frictionCount === 0)} onClick={reanalyzeWithEvidence}>
+              <button disabled={loading || (evidenceCount === 0 && frictionCount === 0 && pendingResponseCount === 0)} onClick={reanalyzeWithEvidence}>
                 {loading ? '재실사 중…' : '새 증거로 다시 실사 →'}
               </button>
               {evidenceLoopMessage && <p className="evidenceLoopMessage">{evidenceLoopMessage}</p>}
@@ -1334,10 +1406,12 @@ function DecisionGap({
   items,
   onCopyPack,
   onCopyRequest,
+  onCreateShare,
 }: {
   items: DiligenceItem[];
   onCopyPack: (items: DiligenceItem[]) => void;
   onCopyRequest: (items: DiligenceItem[]) => void;
+  onCreateShare: (items: DiligenceItem[]) => void;
 }) {
   const ranked = [...items].sort((a, b) => {
     const rank: Record<DiligenceItem['status'], number> = { '검증 우선': 0, '정보 부족': 1, '주의': 2, '확인됨': 3 };
@@ -1362,10 +1436,12 @@ function DecisionGap({
           </div>
         ))}
       </div>
-      <div className="decisionGapActions">
-        <button onClick={() => onCopyPack(items)}>질문 3개만 복사</button>
-        <button className="primary" onClick={() => onCopyRequest(items)}>보내기 좋은 실사 요청문으로 복사 →</button>
+      <div className="decisionGapActions shareActions">
+        <button onClick={() => onCopyPack(items)}>질문만 복사</button>
+        <button onClick={() => onCopyRequest(items)}>요청문 복사</button>
+        <button className="primary" onClick={() => onCreateShare(items)}>회사 답변용 링크 만들기 →</button>
       </div>
+      <p className="sharePrivacyNote">Share Link에는 선택된 질문만 들어갑니다. 후보자의 고민·분석 결과는 상대방에게 공개되지 않습니다.</p>
     </article>
   );
 }
@@ -1651,8 +1727,11 @@ function StartupDiligence({
             </div>
             <div className="responseSignal">
               <small>물어본 뒤 답변 상태</small>
+              {responseSignals[x.dimension] === '링크 응답·확인 필요' && (
+                <p className="pendingExternalResponse">외부 링크 응답이 도착했습니다. 신원을 인증한 응답이 아니므로 내용을 확인한 뒤 아래 상태 중 하나로 직접 분류하세요.</p>
+              )}
               <div>
-                {(['아직 안 물음', '구체적 답변', '모호한 답변', '답변 회피'] as ResponseSignal[]).map((signal) => (
+                {(['아직 안 물음', '구체적 답변', '모호한 답변', '답변 회피'] as Exclude<ResponseSignal, '링크 응답·확인 필요'>[]).map((signal) => (
                   <button
                     key={signal}
                     className={(responseSignals[x.dimension] ?? '아직 안 물음') === signal ? 'active' : ''}
