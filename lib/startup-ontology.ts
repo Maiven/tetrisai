@@ -17,6 +17,7 @@ export type OntologyNodeType =
   | 'Evidence'
   | 'Unknown'
   | 'Question'
+  | 'ResponseSignal'
   | 'FlipCondition'
   | 'VerificationAction';
 
@@ -24,6 +25,7 @@ export type OntologyProvenance =
   | 'user_input'
   | 'user_verified'
   | 'public_source'
+  | 'user_reported_response'
   | 'model_structured'
   | 'system_ontology';
 
@@ -31,7 +33,7 @@ export type OntologyNode = {
   id: string;
   type: OntologyNodeType;
   label: string;
-  status?: 'fact' | 'assumption' | 'unknown' | 'verified' | 'needs_verification' | 'inferred';
+  status?: 'fact' | 'assumption' | 'unknown' | 'verified' | 'needs_verification' | 'response_signal' | 'inferred';
   provenance: OntologyProvenance;
   dimension?: string;
 };
@@ -43,6 +45,7 @@ export type OntologyRelation =
   | 'ASKS'
   | 'VERIFIED_BY'
   | 'PUBLICLY_SUPPORTED_BY'
+  | 'RESPONDED_WITH'
   | 'COULD_FLIP'
   | 'LEADS_TO_ACTION';
 
@@ -158,6 +161,7 @@ export function buildDecisionGraph(
   question: string,
   verifiedEvidence: string[] = [],
   publicEvidence: string[] = [],
+  transparencySignals: string[] = [],
 ): DecisionGraph {
   const nodes: OntologyNode[] = [
     {
@@ -248,6 +252,28 @@ export function buildDecisionGraph(
 
     if (dimIndex >= 0) {
       edges.push({ source: nodeId('dimension', dimIndex), relation: 'PUBLICLY_SUPPORTED_BY', target: id });
+    } else {
+      edges.push({ source: 'decision_1', relation: 'HAS_CLAIM', target: id });
+    }
+  });
+
+  transparencySignals.slice(0, 8).forEach((item, index) => {
+    const id = nodeId('response_signal', index);
+    const [dimension, ...rest] = item.split(':');
+    const label = rest.join(':').trim() || item;
+    const dimIndex = analysis.startupDiligence.findIndex((x) => x.dimension === dimension.trim());
+
+    nodes.push({
+      id,
+      type: 'ResponseSignal',
+      label,
+      status: 'response_signal',
+      provenance: 'user_reported_response',
+      dimension: DIMENSION_TO_MODULE[dimension.trim()],
+    });
+
+    if (dimIndex >= 0) {
+      edges.push({ source: nodeId('dimension', dimIndex), relation: 'RESPONDED_WITH', target: id });
     } else {
       edges.push({ source: 'decision_1', relation: 'HAS_CLAIM', target: id });
     }
