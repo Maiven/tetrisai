@@ -8,7 +8,7 @@ import {
   type DiligenceRequestPayload,
   type DiligenceResponseAnswer,
   type DiligenceResponsePayload,
-} from '@/lib/diligence-share';
+} from '../../lib/diligence-share';
 
 type AnswerState = {
   status: 'concrete' | 'vague' | 'declined';
