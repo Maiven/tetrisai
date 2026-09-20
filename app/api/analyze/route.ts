@@ -26,6 +26,24 @@ const analysisSchema = z.object({
     why: z.string(),
   })).min(4).max(6),
   startupDiligence: z.array(startupDiligenceItem).length(5),
+  axAudit: z.object({
+    exposureMode: z.enum(['증강 중심', '자동화 중심', '혼합', '정보 부족']),
+    exposureNote: z.string(),
+    items: z.array(z.object({
+      area: z.enum(['업무 재설계', '조직 준비도', '인간 판단·권한', '역량 궤적', '품질·책임']),
+      status: z.enum(['확인됨', '주의', '정보 부족', '검증 우선']),
+      signal: z.string(),
+      missingEvidence: z.string(),
+      questionToAsk: z.string(),
+      askWho: z.enum(['채용담당자', '직속리더', '현직자', '공식문서/전문가']),
+    })).length(5),
+    twelveMonthScenario: z.object({
+      moreHuman: z.string(),
+      moreAI: z.string(),
+      watchFor: z.string(),
+    }),
+    axRule: z.string(),
+  }),
   realityCheck: z.object({
     negativePreview: z.string(),
     alternativeQuality: z.string(),
@@ -87,6 +105,7 @@ type StartupContext = {
   headcount?: string;
   initialLean?: string;
   region?: string;
+  aiChange?: string;
 };
 
 const SAMPLE_ANALYSIS: Analysis = {
@@ -151,6 +170,58 @@ const SAMPLE_ANALYSIS: Analysis = {
       questionToAsk: '이 역할에서 1년 뒤 제가 시장에서 새롭게 증명할 수 있어야 하는 능력과 결과는 무엇인가요?', askWho: '직속리더',
     },
   ],
+  axAudit: {
+    exposureMode: '정보 부족',
+    exposureNote: '이 역할이 AI로 증강될지, 일부 업무가 자동화될지, 사람의 판단 범위가 커질지는 현재 정보만으로 알 수 없습니다. 회사의 실제 workflow 변화를 확인해야 합니다.',
+    items: [
+      {
+        area: '업무 재설계',
+        status: '검증 우선',
+        signal: 'AI 도구 사용 여부보다 AI 때문에 실제 업무 순서·handoff·인원 구성이 어떻게 바뀌었는지가 중요합니다.',
+        missingEvidence: '최근 6개월 동안 AI로 없어진 업무, 새로 생긴 업무, agent가 맡는 단계와 사람이 맡는 단계',
+        questionToAsk: '지난 6개월 동안 이 팀의 업무에서 AI 때문에 실제로 사라지거나 새로 생긴 단계는 무엇이고, 제가 맡게 될 업무는 어떻게 달라졌나요?',
+        askWho: '직속리더',
+      },
+      {
+        area: '조직 준비도',
+        status: '정보 부족',
+        signal: '개인의 AI 활용 능력과 별개로 승인된 도구·데이터 접근·관리자 지원·반복 가능한 workflow가 있는지 확인되지 않았습니다.',
+        missingEvidence: '승인된 AI 도구, 데이터 접근 규칙, 팀 표준, 관리자 지원, 실제 운영 중인 agent workflow',
+        questionToAsk: '팀에서 승인해 실제 업무에 반복적으로 쓰는 AI 도구나 agent workflow는 무엇이며, 사용 규칙과 데이터 접근 범위는 어떻게 정해져 있나요?',
+        askWho: '직속리더',
+      },
+      {
+        area: '인간 판단·권한',
+        status: '검증 우선',
+        signal: 'AI가 실행을 많이 맡을수록 사람에게 남는 판단·예외처리·최종 승인 권한이 더 중요해집니다.',
+        missingEvidence: 'AI가 제안/실행할 수 있는 범위, 사람이 반드시 승인하는 결정, 예외처리와 escalation 구조',
+        questionToAsk: 'AI나 agent가 제안하거나 실행할 수 있는 결정과 사람이 반드시 최종 승인해야 하는 결정은 각각 어디까지인가요?',
+        askWho: '직속리더',
+      },
+      {
+        area: '역량 궤적',
+        status: '주의',
+        signal: 'AI로 속도가 빨라져도 문제정의·판단·도메인 전문성 같은 장기 역량이 함께 커지는지는 별도 검증이 필요합니다.',
+        missingEvidence: '12개월 뒤 더 중요해지는 인간 역량, 줄어드는 반복업무, 학습·피드백 구조, AI 없이도 설명 가능한 전문성',
+        questionToAsk: 'AI가 이 역할의 반복업무를 줄인다면 12개월 뒤 제가 더 깊게 가져야 할 인간 전문성·판단력·책임은 무엇인가요?',
+        askWho: '직속리더',
+      },
+      {
+        area: '품질·책임',
+        status: '정보 부족',
+        signal: 'AI 사용이 빠른 조직일수록 output 검증 기준과 오류 발생 시 책임 구조가 중요합니다.',
+        missingEvidence: 'AI-assisted work의 QA 기준, 검토자, 로그/평가 방식, 오류 발생 시 책임자',
+        questionToAsk: 'AI가 만든 결과를 어떤 기준으로 검증하고, 잘못된 결과가 실제 업무에 반영됐을 때 최종 책임과 수정 절차는 어떻게 정해져 있나요?',
+        askWho: '직속리더',
+      },
+    ],
+    twelveMonthScenario: {
+      moreHuman: '문제정의, 우선순위, 이해관계자 조정, 도메인 판단, 예외처리처럼 결과에 책임지는 인간 업무가 상대적으로 더 중요해질 수 있습니다.',
+      moreAI: '초안 생성, 반복 분석, 탐색, 문서화, 일부 코딩·운영 단계처럼 구조화되고 검증 가능한 실행은 AI·agent 비중이 커질 수 있습니다.',
+      watchFor: 'AI-first라는 말만 있고 workflow·품질 기준·사람의 권한이 구체적이지 않거나, AI 생산성 기대만으로 인원·목표를 높이면서 학습·검증 체계가 없는지 확인하세요.',
+    },
+    axRule: 'AI 도입 자체를 좋은 신호로 보지 않습니다. 실제 workflow 재설계, 인간의 판단권, 검증 체계, 학습 지원이 함께 확인될 때만 AX를 커리어 기회로 해석합니다.',
+  },
   realityCheck: {
     negativePreview: '이 팀에서 지난 1년간 사람들이 가장 힘들어했거나 떠난 이유는 무엇이었고, 회사는 그 문제를 어떻게 바꿨나요?',
     alternativeQuality: '현재 회사에 남는 선택과 새 회사로 가는 선택을 각각 12개월 뒤 “내가 증명할 수 있는 역량·성과·네트워크” 기준으로 비교하면 무엇이 더 구체적인가요?',
@@ -236,6 +307,23 @@ function fallback(question: string): Analysis {
       { dimension: '현금·지분 보상', status: '정보 부족', signal: '연봉 외 지분·성과보상은 계약 조건을 확인해야 비교할 수 있습니다.', missingEvidence: '지분율, 행사가격, 베스팅, 행사기간, 성과조건', questionToAsk: '지분 또는 옵션의 완전희석 기준 비율과 행사가격·베스팅·퇴사 후 행사조건을 확인할 수 있나요?', askWho: '공식문서/전문가' },
       { dimension: '학습·다음 선택지', status: '검증 우선', signal: '좋은 커리어 선택은 실패해도 시장에 남는 증거가 있어야 합니다.', missingEvidence: '12개월 뒤 증명할 역량, 강한 동료/멘토, 포트폴리오 결과', questionToAsk: '이 역할에서 1년 뒤 제가 새롭게 증명할 수 있어야 하는 능력과 결과는 무엇인가요?', askWho: '직속리더' },
     ],
+    axAudit: {
+      exposureMode: '정보 부족',
+      exposureNote: '직무명만으로 AI가 이 역할을 자동화할지 증강할지 예측하지 않습니다. 실제 task와 회사의 운영 방식을 확인해야 합니다.',
+      items: [
+        { area: '업무 재설계', status: '정보 부족', signal: 'AI 도구 도입과 업무 재설계는 같은 것이 아닙니다.', missingEvidence: 'AI로 바뀐 실제 업무단계와 human-agent handoff', questionToAsk: '최근 6개월 동안 AI 때문에 이 팀의 실제 업무 흐름에서 무엇이 없어지고 무엇이 새로 생겼나요?', askWho: '직속리더' },
+        { area: '조직 준비도', status: '정보 부족', signal: '개인 역량보다 조직이 AI를 안전하게 활용할 구조가 있는지도 중요합니다.', missingEvidence: '승인 도구, 데이터 접근, 팀 표준, 관리자 지원', questionToAsk: 'AI를 실제 업무에 사용할 때 승인된 도구·데이터 규칙·팀 표준은 무엇인가요?', askWho: '직속리더' },
+        { area: '인간 판단·권한', status: '검증 우선', signal: 'AI가 실행을 맡아도 사람이 어떤 판단과 책임을 유지하는지 확인해야 합니다.', missingEvidence: '사람의 최종 승인 범위와 예외처리 권한', questionToAsk: 'AI나 agent가 실행할 수 있는 범위와 사람이 반드시 최종 결정해야 하는 범위를 구체적으로 나눠 설명해주실 수 있나요?', askWho: '직속리더' },
+        { area: '역량 궤적', status: '주의', signal: '속도 향상이 장기적인 전문성 향상을 보장하지 않습니다.', missingEvidence: '12개월 뒤 더 중요해질 인간 역량과 학습 구조', questionToAsk: '이 역할에서 AI 사용이 늘수록 오히려 더 중요해지는 인간 역량은 무엇이고 회사는 그것을 어떻게 키우나요?', askWho: '직속리더' },
+        { area: '품질·책임', status: '정보 부족', signal: 'AI output의 품질 검증과 책임 구조가 확인되지 않았습니다.', missingEvidence: 'QA 기준, 승인자, 오류 대응 절차', questionToAsk: 'AI가 만든 결과는 누가 어떤 기준으로 검증하고 오류가 발생하면 누가 책임지나요?', askWho: '직속리더' },
+      ],
+      twelveMonthScenario: {
+        moreHuman: '문제정의·판단·도메인 전문성·예외처리·책임 같은 인간 업무가 더 중요해질 수 있습니다.',
+        moreAI: '반복적이고 구조화되며 결과를 검증하기 쉬운 단계는 AI 비중이 커질 수 있습니다.',
+        watchFor: '도구는 많지만 실제 workflow·품질 기준·사람의 권한이 없거나, AI를 이유로 목표만 높아지는지 확인하세요.',
+      },
+      axRule: 'AI 노출도는 해고 예측이 아닙니다. 실제 업무 재설계와 조직 준비도를 증거로 확인합니다.',
+    },
     realityCheck: {
       negativePreview: '이 역할에서 실제 구성원이 가장 힘들어하는 점과 최근 퇴사한 사람이 떠난 이유를 구체적 사례로 물어보세요.',
       alternativeQuality: '다른 일자리가 “있다/없다”보다 현재 대안이 12개월 뒤 내 역량·성과·네트워크를 얼마나 높이는지 비교하세요.',
@@ -322,6 +410,23 @@ function fallbackEnglish(question: string): Analysis {
       { dimension: '현금·지분 보상', status: '검증 우선', signal: 'Cash may be clear while equity remains economically ambiguous.', missingEvidence: 'ownership basis, strike/exercise price, vesting, post-termination exercise, liquidity constraints', questionToAsk: 'What percentage of fully diluted ownership does this grant represent, and what are the vesting and exercise conditions?', askWho: '공식문서/전문가' },
       { dimension: '학습·다음 선택지', status: '검증 우선', signal: 'Fast company growth does not guarantee durable career capital.', missingEvidence: 'skills, portfolio evidence, mentor/peer quality, future options', questionToAsk: 'What should I be able to prove in the market 12 months from now that I cannot prove today?', askWho: '직속리더' },
     ],
+    axAudit: {
+      exposureMode: '정보 부족',
+      exposureNote: 'A job title is not enough to predict whether AI will automate or augment this role. Verify the actual tasks and operating model.',
+      items: [
+        { area: '업무 재설계', status: '정보 부족', signal: 'Tool access is not the same as work redesign.', missingEvidence: 'actual workflow steps changed by AI and human-agent handoffs', questionToAsk: 'In the last six months, which steps in this team’s workflow disappeared, changed, or were newly created because of AI or agents?', askWho: '직속리더' },
+        { area: '조직 준비도', status: '정보 부족', signal: 'Individual AI skill only creates value when the organization can support safe, repeatable use.', missingEvidence: 'sanctioned tools, data access, team standards, manager support', questionToAsk: 'Which AI tools or agent workflows are actually approved and used repeatedly by the team, and what data/governance rules apply?', askWho: '직속리더' },
+        { area: '인간 판단·권한', status: '검증 우선', signal: 'As agents execute more work, retained human judgment and escalation rights matter more.', missingEvidence: 'human approval boundaries, exception handling, escalation rights', questionToAsk: 'Which decisions may an AI or agent propose or execute, and which decisions must remain human-approved?', askWho: '직속리더' },
+        { area: '역량 궤적', status: '주의', signal: 'Faster output does not automatically mean stronger long-term expertise.', missingEvidence: 'durable human skills, learning loops, domain expertise that remains valuable', questionToAsk: 'As AI takes over more routine work, what human expertise and judgment should I become significantly better at over the next 12 months?', askWho: '직속리더' },
+        { area: '품질·책임', status: '정보 부족', signal: 'AI-assisted work needs explicit quality standards and accountability.', missingEvidence: 'QA standards, reviewers, evaluation, incident ownership', questionToAsk: 'How is AI-generated work evaluated before it reaches customers or decisions, and who is accountable when it is wrong?', askWho: '직속리더' },
+      ],
+      twelveMonthScenario: {
+        moreHuman: 'Problem framing, judgment, domain expertise, stakeholder alignment, exception handling, and accountability may become more important.',
+        moreAI: 'Drafting, search, repetitive analysis, documentation, coding, and other structured execution steps may increasingly shift to AI or agents.',
+        watchFor: 'Watch for “AI-first” claims without concrete workflow redesign, quality controls, human decision rights, or learning support — especially if productivity expectations rise faster than the operating system around them.',
+      },
+      axRule: 'AI adoption is not automatically a positive career signal. Treat it as an opportunity only when workflow redesign, human agency, quality controls, and learning support are concrete.',
+    },
     realityCheck: {
       negativePreview: 'What has been hardest about this team in the last year, and why have strong people left?',
       alternativeQuality: 'Compare each option by what skills, outcomes, network, and future choices it is likely to leave you with after 12 months.',
@@ -415,6 +520,7 @@ function normalizeContext(value: unknown): StartupContext {
     headcount: clean(v.headcount),
     initialLean: clean(v.initialLean),
     region: clean(v.region),
+    aiChange: clean(v.aiChange),
   };
 }
 
@@ -464,6 +570,7 @@ export async function POST(req: Request) {
       context.headcount ? `회사 규모: ${context.headcount}` : '',
       context.initialLean ? `분석 전 사용자의 현재 가설/기울기: ${context.initialLean}` : '',
       context.region ? `국가/지역: ${context.region}` : '',
+      context.aiChange ? `현재 알려진 AX/AI 업무 변화: ${context.aiChange}` : '',
     ].filter(Boolean).join('\n');
 
     const verifiedEvidenceText = verifiedEvidence.length
@@ -525,7 +632,14 @@ ${ontologyPrompt}
 28) 사용자의 국가/지역에 따라 주식보상·세금·노동·증권 규정이 달라질 수 있습니다. 특정 국가의 법률·세금 규칙을 사용자가 제공하지 않았는데 단정하지 말고, 공식 문서·전문가 확인이 필요한 항목으로 돌립니다.
 29) 미국 ISO/NSO, 영국 EMI, 한국 주식매수선택권, 인도 ESOP 등 관할권별 제도 이름은 사용자가 제공하거나 공개 문서에서 확인된 경우에만 구체적으로 사용합니다.
 30) 글로벌 원격근무라면 회사 소재지와 근로자의 세법·고용 관할권이 다를 수 있음을 명시하고 어느 관할권이 적용되는지 직접 확인하게 합니다.
-31) language가 en이면 자유 서술 텍스트는 자연스럽고 간결한 영어로 작성합니다. 단, schema enum 값(예: '회사 생존 신호', '확인됨', '지금 10분')은 구조 검증을 위해 반드시 원래 한국어 enum 토큰을 그대로 사용합니다.
+31) axAudit는 'AI를 쓰는가'가 아니라 실제 AI Transformation을 실사합니다. 업무 재설계, 조직 준비도, 인간 판단·권한, 역량 궤적, 품질·책임 다섯 영역을 반드시 구분합니다.
+32) AI exposure 또는 자동화 가능성을 해고 확률이나 직업 소멸 확률로 바꾸지 않습니다. task exposure와 실제 employment outcome은 다릅니다. 근거가 없으면 exposureMode='정보 부족'으로 둡니다.
+33) 회사가 'AI-first', 'agentic', 'AI-native'라고 표현해도 실제 workflow 변화·human-agent handoff·승인된 도구·데이터 규칙·품질 평가·책임자가 구체적으로 확인되지 않으면 홍보 문구를 AX 증거로 인정하지 않습니다.
+34) AX에서 가장 중요한 질문은 '어떤 도구를 쓰나요?'보다 '최근 6개월 실제 업무가 무엇이 바뀌었고, 무엇을 AI가 실행하며, 사람은 무엇을 판단·승인·책임지는가?'입니다.
+35) 개인의 AI 숙련도와 조직의 AI 준비도를 분리합니다. 사용자가 AI를 잘해도 조직이 도구·데이터·관리자 지원·거버넌스를 제공하지 못하면 그 불일치를 드러냅니다.
+36) AI가 반복업무를 줄이는 경우 장기 career capital이 문제정의·판단·도메인 전문성·리더십·검증 능력 쪽으로 이동하는지 확인합니다. 반대로 단순 위임 때문에 학습이 약해질 가능성도 질문으로 남깁니다.
+37) broad research에서 보고된 생산성·임금·고용 수치를 특정 회사나 개인에게 그대로 적용하지 않습니다.
+38) language가 en이면 자유 서술 텍스트는 자연스럽고 간결한 영어로 작성합니다. 단, schema enum 값(예: '회사 생존 신호', '확인됨', '지금 10분')은 구조 검증을 위해 반드시 원래 한국어 enum 토큰을 그대로 사용합니다.
 ${language === 'en' ? 'Write all non-enum narrative fields in concise professional English.' : '문장은 짧고 구체적인 한국어로 작성하세요.'}`,
       prompt: `다음 스타트업 커리어/업무 결정을 Employee-side Due Diligence 방식으로 분석하세요.
 
