@@ -1,7 +1,7 @@
 'use client';
 
 import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
-import { decodeDiligencePayload, encodeDiligencePayload, type DiligenceResponsePayload } from '@/lib/diligence-share';
+import { decodeDiligencePayload, encodeDiligencePayload, type DiligenceResponsePayload } from '../lib/diligence-share';
 
 type Future = { title: string; description: string; upside: string; downside: string };
 type Premortem = { step: string; earlySignal: string };
