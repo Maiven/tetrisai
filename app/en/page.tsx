@@ -30,6 +30,8 @@ type Analysis = {
   axAudit: {
     exposureMode: '증강 중심' | '자동화 중심' | '혼합' | '정보 부족';
     exposureNote: string;
+    delegationLevel: 'NON_AX' | 'LEVEL 1 정보 처리 위임' | 'LEVEL 2 업무 수행 위임' | 'LEVEL 3 목표 기반 계획·수행 위임' | '정보 부족';
+    delegationNote: string;
     items: {
       area: '업무 재설계' | '조직 준비도' | '인간 판단·권한' | '역량 궤적' | '품질·책임';
       status: '확인됨' | '주의' | '정보 부족' | '검증 우선';
@@ -1020,6 +1022,14 @@ const AX_MODE: Record<Analysis['axAudit']['exposureMode'], string> = {
   '정보 부족': 'Insufficient evidence',
 };
 
+const AX_DELEGATION: Record<Analysis['axAudit']['delegationLevel'], string> = {
+  'NON_AX': 'NON-AX · no material delegation verified',
+  'LEVEL 1 정보 처리 위임': 'L1 · information processing delegated',
+  'LEVEL 2 업무 수행 위임': 'L2 · bounded task execution delegated',
+  'LEVEL 3 목표 기반 계획·수행 위임': 'L3 · goal-based planning & execution delegated',
+  '정보 부족': 'Insufficient evidence',
+};
+
 const AX_FIT: Record<Analysis['axAudit']['readinessFit']['state'], string> = {
   '정렬 가능': 'Potentially aligned',
   '개인 우위·조직 지연 가능': 'Individual ahead · organization may lag',
@@ -1044,6 +1054,11 @@ function GlobalAXRoleAudit({
           <p>{audit.exposureNote}</p>
         </div>
         <span className="axMode">{AX_MODE[audit.exposureMode]}</span>
+      </div>
+
+      <div className="axDelegation">
+        <div><span>DELEGATION DEPTH</span><b>{AX_DELEGATION[audit.delegationLevel]}</b></div>
+        <p>{audit.delegationNote}</p>
       </div>
 
       <div className="axFit">
