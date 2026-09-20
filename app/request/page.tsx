@@ -40,7 +40,7 @@ export default function DiligenceRequestPage() {
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    const token = new URLSearchParams(window.location.search).get('payload');
+    const token = new URLSearchParams(window.location.hash.replace(/^#/, '')).get('payload');
     if (!token) {
       setInvalid(true);
       return;
@@ -104,7 +104,7 @@ export default function DiligenceRequestPage() {
     };
 
     const token = encodeDiligencePayload(response);
-    setResponseLink(`${window.location.origin}${payload.returnPath}?response=${token}`);
+    setResponseLink(`${window.location.origin}${payload.returnPath}#response=${token}`);
   }
 
   async function copyResponseLink() {
@@ -197,7 +197,7 @@ export default function DiligenceRequestPage() {
           <div className="requestPrivacy">
             <b>{isKo ? 'PRIVATE BY DESIGN' : 'PRIVATE BY DESIGN'}</b>
             <span>{isKo ? '후보자의 분석 결과는 공유되지 않음' : 'Candidate analysis is not shared'}</span>
-            <span>{isKo ? '응답 서버 저장 없음' : 'No server-side response storage'}</span>
+            <span>{isKo ? '별도 응답 DB 저장 없음' : 'No separate response database'}</span>
             <span>{isKo ? '14일 요청 만료' : '14-day request expiry'}</span>
           </div>
         </header>
