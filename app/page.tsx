@@ -68,7 +68,7 @@ type Analysis = {
 };
 type OntologyNode = {
   id: string;
-  type: 'Decision' | 'Dimension' | 'Claim' | 'Evidence' | 'Unknown' | 'Question' | 'ResponseSignal' | 'FlipCondition' | 'VerificationAction';
+  type: 'Decision' | 'Dimension' | 'Claim' | 'Evidence' | 'Unknown' | 'Question' | 'ResponseSignal' | 'AXSignal' | 'FlipCondition' | 'VerificationAction';
   label: string;
   status?: string;
   provenance: 'user_input' | 'user_verified' | 'public_source' | 'user_reported_response' | 'model_structured' | 'system_ontology';
@@ -76,7 +76,7 @@ type OntologyNode = {
 };
 type OntologyEdge = {
   source: string;
-  relation: 'HAS_DIMENSION' | 'HAS_CLAIM' | 'REQUIRES_EVIDENCE' | 'ASKS' | 'VERIFIED_BY' | 'PUBLICLY_SUPPORTED_BY' | 'RESPONDED_WITH' | 'COULD_FLIP' | 'LEADS_TO_ACTION';
+  relation: 'HAS_DIMENSION' | 'HAS_CLAIM' | 'REQUIRES_EVIDENCE' | 'ASKS' | 'VERIFIED_BY' | 'PUBLICLY_SUPPORTED_BY' | 'RESPONDED_WITH' | 'TRANSFORMED_BY' | 'COULD_FLIP' | 'LEADS_TO_ACTION';
   target: string;
 };
 type DecisionGraph = { ontologyVersion: string; nodes: OntologyNode[]; edges: OntologyEdge[] };
@@ -1680,7 +1680,7 @@ function PublicEvidenceLab({
 function OntologyMap({ graph, validation }: { graph: DecisionGraph; validation?: { valid: boolean; violations: string[] } }) {
   const nodeById = new Map(graph.nodes.map((n) => [n.id, n]));
   const relationRows = graph.edges
-    .filter((e) => ['REQUIRES_EVIDENCE', 'VERIFIED_BY', 'PUBLICLY_SUPPORTED_BY', 'RESPONDED_WITH', 'COULD_FLIP', 'LEADS_TO_ACTION'].includes(e.relation))
+    .filter((e) => ['REQUIRES_EVIDENCE', 'VERIFIED_BY', 'PUBLICLY_SUPPORTED_BY', 'RESPONDED_WITH', 'TRANSFORMED_BY', 'COULD_FLIP', 'LEADS_TO_ACTION'].includes(e.relation))
     .slice(0, 12);
   const counts = {
     dimensions: graph.nodes.filter((n) => n.type === 'Dimension').length,
@@ -1697,6 +1697,7 @@ function OntologyMap({ graph, validation }: { graph: DecisionGraph; validation?:
     VERIFIED_BY: 'VERIFIED BY',
     PUBLICLY_SUPPORTED_BY: 'PUBLIC SOURCE',
     RESPONDED_WITH: 'RESPONSE SIGNAL',
+    TRANSFORMED_BY: 'AX SIGNAL',
     COULD_FLIP: 'COULD FLIP',
     LEADS_TO_ACTION: 'LEADS TO',
   };
