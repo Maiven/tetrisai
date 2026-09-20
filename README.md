@@ -1,8 +1,14 @@
 # 반대편 · Startup Employee Due Diligence
 
-> 회사보다 먼저, 내 커리어가 투자할 곳을 실사하세요.
+> 스타트업 오퍼를 받았다면, 수락하기 전에 아직 확인하지 못한 것을 찾으세요.
 
-반대편은 스타트업 종사자의 입사·잔류·이직·역할·보상·스톡옵션 결정을 검증하는 **Employee-side Startup Due Diligence** 웹앱입니다.
+반대편은 스타트업 종사자가 회사·역할·리더·보상·학습의 정보 비대칭을 줄이도록 돕는 **Employee-side Startup Due Diligence** 제품입니다.
+
+핵심 카테고리 가설은 **Candidate Diligence Protocol**입니다.
+
+`Candidate asks → Company responds → Response quality → Evidence → Re-diligence`
+
+즉 범용 AI가 결론을 대신 내리는 제품이 아니라, 후보자가 회사와 구조적으로 증거를 교환하는 workflow를 만듭니다.
 
 ## Beachhead ICP
 
@@ -40,7 +46,9 @@
 - 외부 근거 없는 확률/기업가치/지분 미래가치를 만들지 않음
 - 옵션 수보다 지분율·행사가격·베스팅·행사기간 등 확인 항목을 구조화
 - 회사 성장보다 개인에게 12개월 뒤 남을 증명 가능한 역량을 봄
-- 10초 데모는 모델 장애와 무관하게 즉시 체험 가능
+- 입력 없이 즉시 시작할 수 있는 guided due-diligence path
+- 질문마다 채용담당자·직속리더·현직자·공식문서/전문가 중 확인 대상을 명시
+- 실제 답변을 '구체적 / 모호 / 회피'로 분리해 Transparency Ledger에 기록
 - 실시간 AI 실패 시 로컬 due-diligence framework로 fallback
 
 ## Stack
@@ -71,6 +79,15 @@ https://decision-mirror-eight.vercel.app
 ## Business strategy
 
 See [docs/STARTUP_BUSINESS_MODEL.md](./docs/STARTUP_BUSINESS_MODEL.md)
+
+## Direct problem evidence
+
+- Bryan, Hoffman & Sariri, **Information Frictions and Employee Sorting between Start-Ups**, AEJ: Applied Economics (2026)
+  - https://www.aeaweb.org/articles?id=10.1257%2Fapp.20240722
+  - 스타트업 품질 정보 제공이 실제 지원 배분을 더 높은 평가의 기업 쪽으로 이동시켰고, 동시에 스타트업 성공에 대한 과도한 낙관이 남아 더 넓은 정보 부족 문제를 보여줌.
+- AI vs human career counseling (Technology in Society, 2026)
+  - https://www.sciencedirect.com/science/article/pii/S0160791X26000904
+  - AI는 빠른 정보 제공에 강하지만 인간 상담이 decision self-efficacy와 전체 의사결정 품질에 더 강함. 반대편이 'AI 상담사'가 아니라 evidence workflow여야 하는 근거.
 
 ## Research roots
 
