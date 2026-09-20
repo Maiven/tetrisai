@@ -49,6 +49,9 @@
 - 입력 없이 즉시 시작할 수 있는 guided due-diligence path
 - 질문마다 채용담당자·직속리더·현직자·공식문서/전문가 중 확인 대상을 명시
 - 실제 답변을 '구체적 / 모호 / 회피'로 분리해 Transparency Ledger에 기록
+- Candidate Diligence Share Link로 질문만 회사에 보내고, 응답은 확인 필요 상태로 가져옴
+- AX Role Reality: 업무 재설계 · 업무 위임 깊이 · 인간 판단권 · 조직 준비도 · 역량 궤적 · 품질/책임을 별도 실사
+- AI exposure를 해고 확률로 바꾸지 않고, 실제 task/workflow 증거를 요구
 - 실시간 AI 실패 시 로컬 due-diligence framework로 fallback
 
 ## Stack
@@ -70,7 +73,8 @@
 - future Teams product must be separated from Personal data
 
 Privacy note: [/privacy](https://decision-mirror-eight.vercel.app/privacy)  
-Methodology: [/methodology](https://decision-mirror-eight.vercel.app/methodology)
+Methodology: [/methodology](https://decision-mirror-eight.vercel.app/methodology)  
+AX research synthesis: [docs/AX_RESEARCH_SYNTHESIS_2026.md](./docs/AX_RESEARCH_SYNTHESIS_2026.md)
 
 ## Live service
 
