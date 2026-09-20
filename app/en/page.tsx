@@ -27,6 +27,20 @@ type Analysis = {
   blindSpots: string[];
   evidenceLedger: { claim: string; status: '사실' | '가정' | '미확인'; why: string }[];
   startupDiligence: DiligenceItem[];
+  axAudit: {
+    exposureMode: '증강 중심' | '자동화 중심' | '혼합' | '정보 부족';
+    exposureNote: string;
+    items: {
+      area: '업무 재설계' | '조직 준비도' | '인간 판단·권한' | '역량 궤적' | '품질·책임';
+      status: '확인됨' | '주의' | '정보 부족' | '검증 우선';
+      signal: string;
+      missingEvidence: string;
+      questionToAsk: string;
+      askWho: '채용담당자' | '직속리더' | '현직자' | '공식문서/전문가';
+    }[];
+    twelveMonthScenario: { moreHuman: string; moreAI: string; watchFor: string };
+    axRule: string;
+  };
   realityCheck: { negativePreview: string; alternativeQuality: string; promiseGap: string };
   sourceAudit: {
     present: boolean;
@@ -90,6 +104,7 @@ type Context = {
   headcount: string;
   initialLean: string;
   region: string;
+  aiChange: string;
 };
 
 const DIMENSION: Record<Dimension, string> = {
@@ -214,6 +229,7 @@ const defaultContext: Context = {
   headcount: 'Not specified',
   initialLean: 'Not sure yet',
   region: 'Not specified',
+  aiChange: 'Not specified',
 };
 
 export default function GlobalPage() {
@@ -306,6 +322,7 @@ export default function GlobalPage() {
       headcount: context.headcount === 'Not specified' ? '' : context.headcount,
       initialLean: context.initialLean,
       region: context.region === 'Not specified' ? '' : context.region,
+      aiChange: context.aiChange === 'Not specified' ? '' : context.aiChange,
     };
   }
 
@@ -584,6 +601,7 @@ export default function GlobalPage() {
                   <GlobalSelect label="Role" value={context.role} options={['Not specified','Product / PM','Data / AI','Engineering','Design','Growth / Marketing','Sales / BD','Operations / People','Leadership','Other']} onChange={(v) => setContext({ ...context, role: v })} />
                   <GlobalSelect label="Company size" value={context.headcount} options={['Not specified','1–19','20–100','101–250','251+','Unknown']} onChange={(v) => setContext({ ...context, headcount: v })} />
                   <GlobalSelect label="My current lean" value={context.initialLean} options={['Not sure yet','Leaning yes / accept','Leaning no / stay','Leaning toward another option']} onChange={(v) => setContext({ ...context, initialLean: v })} />
+                  <GlobalSelect label="AX / AI work change" value={context.aiChange} options={['Not specified','Some AI tools only','Some tasks automated','Agent workflow in production','Role / process redesign underway','Unknown']} onChange={(v) => setContext({ ...context, aiChange: v })} />
                 </div>
                 <label className="globalSourceInput">
                   <span>Public job description or sanitized offer summary · optional</span>
@@ -746,6 +764,8 @@ export default function GlobalPage() {
                 <button onClick={reanalyze} disabled={(evidenceCount === 0 && frictionCount === 0 && pendingResponseCount === 0) || loading}>Re-diligence with new evidence →</button>
               </div>
             </section>
+
+            <GlobalAXRoleAudit audit={result.analysis.axAudit} onCopyQuestion={copyQuestion} />
 
             <GlobalExpectationMemo
               items={result.analysis.startupDiligence}
@@ -973,6 +993,73 @@ function GlobalEvidenceRouter() {
       </div>
       <p className="routerNotice">External services are examples of verification starting points, not Bandaepyeon partners. Availability, pricing, and regional access may vary.</p>
     </details>
+  );
+}
+
+const AX_AREA: Record<Analysis['axAudit']['items'][number]['area'], string> = {
+  '업무 재설계': 'Work redesign',
+  '조직 준비도': 'Organization readiness',
+  '인간 판단·권한': 'Human judgment & agency',
+  '역량 궤적': 'Skill trajectory',
+  '품질·책임': 'Quality & accountability',
+};
+
+const AX_MODE: Record<Analysis['axAudit']['exposureMode'], string> = {
+  '증강 중심': 'Augmentation-leaning',
+  '자동화 중심': 'Automation-leaning',
+  '혼합': 'Mixed',
+  '정보 부족': 'Insufficient evidence',
+};
+
+function GlobalAXRoleAudit({
+  audit,
+  onCopyQuestion,
+}: {
+  audit: Analysis['axAudit'];
+  onCopyQuestion: (text: string) => void;
+}) {
+  return (
+    <article className="axAudit globalAxAudit">
+      <div className="axAuditHead">
+        <div>
+          <p className="panelLabel">AX ROLE REALITY · AI TRANSFORMATION</p>
+          <h3>Do not ask whether the company “uses AI.” Diligence how AI changes your actual work.</h3>
+          <p>{audit.exposureNote}</p>
+        </div>
+        <span className="axMode">{AX_MODE[audit.exposureMode]}</span>
+      </div>
+
+      <div className="axAuditGrid">
+        {audit.items.map((item, index) => (
+          <section key={item.area}>
+            <div className="axCardTop">
+              <i>{String(index + 1).padStart(2, '0')}</i>
+              <b>{AX_AREA[item.area]}</b>
+              <span>{STATUS[item.status]}</span>
+            </div>
+            <p>{item.signal}</p>
+            <div className="axMissing"><small>EVIDENCE NEEDED</small><strong>{item.missingEvidence}</strong></div>
+            <div className="axQuestion">
+              <small>ASK · {ASK_WHO[item.askWho]}</small>
+              <p>{item.questionToAsk}</p>
+              <button onClick={() => onCopyQuestion(item.questionToAsk)}>Copy AX question</button>
+            </div>
+          </section>
+        ))}
+      </div>
+
+      <div className="axScenario">
+        <article><span>MORE HUMAN</span><p>{audit.twelveMonthScenario.moreHuman}</p></article>
+        <article><span>MORE AI / AGENT</span><p>{audit.twelveMonthScenario.moreAI}</p></article>
+        <article><span>WATCH FOR</span><p>{audit.twelveMonthScenario.watchFor}</p></article>
+      </div>
+
+      <div className="axRule">
+        <b>AX RULE</b>
+        <p>{audit.axRule}</p>
+        <small>AI exposure is not a layoff probability. Verify tasks, workflows, decision rights, quality controls, and learning systems.</small>
+      </div>
+    </article>
   );
 }
 
