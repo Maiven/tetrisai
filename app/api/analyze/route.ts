@@ -37,6 +37,11 @@ const analysisSchema = z.object({
       questionToAsk: z.string(),
       askWho: z.enum(['채용담당자', '직속리더', '현직자', '공식문서/전문가']),
     })).length(5),
+    readinessFit: z.object({
+      state: z.enum(['정렬 가능', '개인 우위·조직 지연 가능', '조직 우위·개인 적응 필요', '양쪽 초기', '정보 부족']),
+      note: z.string(),
+      verify: z.string(),
+    }),
     twelveMonthScenario: z.object({
       moreHuman: z.string(),
       moreAI: z.string(),
@@ -106,6 +111,7 @@ type StartupContext = {
   initialLean?: string;
   region?: string;
   aiChange?: string;
+  personalAI?: string;
 };
 
 const SAMPLE_ANALYSIS: Analysis = {
@@ -215,6 +221,11 @@ const SAMPLE_ANALYSIS: Analysis = {
         askWho: '직속리더',
       },
     ],
+    readinessFit: {
+      state: '정보 부족',
+      note: '회사의 AX 수준과 지원자의 실제 AI 업무 방식이 얼마나 맞는지 아직 확인할 정보가 부족합니다.',
+      verify: '내가 현재 AI를 어떤 수준으로 업무에 쓰는지와, 팀이 실제로 허용·지원하는 수준을 각각 확인해 차이를 비교하세요.',
+    },
     twelveMonthScenario: {
       moreHuman: '문제정의, 우선순위, 이해관계자 조정, 도메인 판단, 예외처리처럼 결과에 책임지는 인간 업무가 상대적으로 더 중요해질 수 있습니다.',
       moreAI: '초안 생성, 반복 분석, 탐색, 문서화, 일부 코딩·운영 단계처럼 구조화되고 검증 가능한 실행은 AI·agent 비중이 커질 수 있습니다.',
@@ -317,6 +328,11 @@ function fallback(question: string): Analysis {
         { area: '역량 궤적', status: '주의', signal: '속도 향상이 장기적인 전문성 향상을 보장하지 않습니다.', missingEvidence: '12개월 뒤 더 중요해질 인간 역량과 학습 구조', questionToAsk: '이 역할에서 AI 사용이 늘수록 오히려 더 중요해지는 인간 역량은 무엇이고 회사는 그것을 어떻게 키우나요?', askWho: '직속리더' },
         { area: '품질·책임', status: '정보 부족', signal: 'AI output의 품질 검증과 책임 구조가 확인되지 않았습니다.', missingEvidence: 'QA 기준, 승인자, 오류 대응 절차', questionToAsk: 'AI가 만든 결과는 누가 어떤 기준으로 검증하고 오류가 발생하면 누가 책임지나요?', askWho: '직속리더' },
       ],
+      readinessFit: {
+        state: '정보 부족',
+        note: '개인의 AI 활용 수준과 조직의 AI 준비도를 모두 확인하기 전에는 fit을 판단하지 않습니다.',
+        verify: '내 AI 사용 수준과 팀의 승인 도구·workflow·관리자 지원 수준을 따로 적고 비교하세요.',
+      },
       twelveMonthScenario: {
         moreHuman: '문제정의·판단·도메인 전문성·예외처리·책임 같은 인간 업무가 더 중요해질 수 있습니다.',
         moreAI: '반복적이고 구조화되며 결과를 검증하기 쉬운 단계는 AI 비중이 커질 수 있습니다.',
@@ -420,6 +436,11 @@ function fallbackEnglish(question: string): Analysis {
         { area: '역량 궤적', status: '주의', signal: 'Faster output does not automatically mean stronger long-term expertise.', missingEvidence: 'durable human skills, learning loops, domain expertise that remains valuable', questionToAsk: 'As AI takes over more routine work, what human expertise and judgment should I become significantly better at over the next 12 months?', askWho: '직속리더' },
         { area: '품질·책임', status: '정보 부족', signal: 'AI-assisted work needs explicit quality standards and accountability.', missingEvidence: 'QA standards, reviewers, evaluation, incident ownership', questionToAsk: 'How is AI-generated work evaluated before it reaches customers or decisions, and who is accountable when it is wrong?', askWho: '직속리더' },
       ],
+      readinessFit: {
+        state: '정보 부족',
+        note: 'Do not infer fit until both your own AI work practices and the organization’s actual readiness are known.',
+        verify: 'Compare how you currently use AI at work with the tools, workflows, manager support, and governance the team actually provides.',
+      },
       twelveMonthScenario: {
         moreHuman: 'Problem framing, judgment, domain expertise, stakeholder alignment, exception handling, and accountability may become more important.',
         moreAI: 'Drafting, search, repetitive analysis, documentation, coding, and other structured execution steps may increasingly shift to AI or agents.',
@@ -521,6 +542,7 @@ function normalizeContext(value: unknown): StartupContext {
     initialLean: clean(v.initialLean),
     region: clean(v.region),
     aiChange: clean(v.aiChange),
+    personalAI: clean(v.personalAI),
   };
 }
 
@@ -571,6 +593,7 @@ export async function POST(req: Request) {
       context.initialLean ? `분석 전 사용자의 현재 가설/기울기: ${context.initialLean}` : '',
       context.region ? `국가/지역: ${context.region}` : '',
       context.aiChange ? `현재 알려진 AX/AI 업무 변화: ${context.aiChange}` : '',
+      context.personalAI ? `사용자의 현재 AI 업무 방식: ${context.personalAI}` : '',
     ].filter(Boolean).join('\n');
 
     const verifiedEvidenceText = verifiedEvidence.length
@@ -636,7 +659,7 @@ ${ontologyPrompt}
 32) AI exposure 또는 자동화 가능성을 해고 확률이나 직업 소멸 확률로 바꾸지 않습니다. task exposure와 실제 employment outcome은 다릅니다. 근거가 없으면 exposureMode='정보 부족'으로 둡니다.
 33) 회사가 'AI-first', 'agentic', 'AI-native'라고 표현해도 실제 workflow 변화·human-agent handoff·승인된 도구·데이터 규칙·품질 평가·책임자가 구체적으로 확인되지 않으면 홍보 문구를 AX 증거로 인정하지 않습니다.
 34) AX에서 가장 중요한 질문은 '어떤 도구를 쓰나요?'보다 '최근 6개월 실제 업무가 무엇이 바뀌었고, 무엇을 AI가 실행하며, 사람은 무엇을 판단·승인·책임지는가?'입니다.
-35) 개인의 AI 숙련도와 조직의 AI 준비도를 분리합니다. 사용자가 AI를 잘해도 조직이 도구·데이터·관리자 지원·거버넌스를 제공하지 못하면 그 불일치를 드러냅니다.
+35) 개인의 AI 숙련도와 조직의 AI 준비도를 분리합니다. readinessFit은 사용자가 제공한 personalAI와 회사의 실제/제공된 AX 증거가 있을 때만 구체화하고, 없으면 '정보 부족'으로 둡니다. 개인이 앞서고 조직이 못 받쳐주면 '개인 우위·조직 지연 가능', 조직이 앞서고 개인 적응이 필요하면 '조직 우위·개인 적응 필요'로 표현할 수 있으나 이를 좋음/나쁨 점수로 바꾸지 않습니다.
 36) AI가 반복업무를 줄이는 경우 장기 career capital이 문제정의·판단·도메인 전문성·리더십·검증 능력 쪽으로 이동하는지 확인합니다. 반대로 단순 위임 때문에 학습이 약해질 가능성도 질문으로 남깁니다.
 37) broad research에서 보고된 생산성·임금·고용 수치를 특정 회사나 개인에게 그대로 적용하지 않습니다.
 38) language가 en이면 자유 서술 텍스트는 자연스럽고 간결한 영어로 작성합니다. 단, schema enum 값(예: '회사 생존 신호', '확인됨', '지금 10분')은 구조 검증을 위해 반드시 원래 한국어 enum 토큰을 그대로 사용합니다.
