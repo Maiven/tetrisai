@@ -267,7 +267,7 @@ export default function GlobalPage() {
   }, []);
 
   useEffect(() => {
-    const token = new URLSearchParams(window.location.search).get('response');
+    const token = new URLSearchParams(window.location.hash.replace(/^#/, '')).get('response');
     if (!token) return;
     const decoded = decodeDiligencePayload(token);
     if (!decoded || decoded.type !== 'response' || decoded.returnPath !== '/en') return;
@@ -295,8 +295,7 @@ export default function GlobalPage() {
     setImportedResponseCount(decoded.answers.length);
 
     const cleanUrl = new URL(window.location.href);
-    cleanUrl.searchParams.delete('response');
-    window.history.replaceState({}, '', `${cleanUrl.pathname}${cleanUrl.search}${cleanUrl.hash}`);
+    window.history.replaceState({}, '', `${cleanUrl.pathname}${cleanUrl.search}`);
   }, []);
 
   function contextPayload() {
@@ -493,7 +492,7 @@ export default function GlobalPage() {
       questions: top.map((x) => ({ dimension: x.dimension, question: x.questionToAsk, askWho: ASK_WHO[x.askWho] })),
     };
     savePassport();
-    const link = `${window.location.origin}/request?payload=${encodeDiligencePayload(payload)}`;
+    const link = `${window.location.origin}/request#payload=${encodeDiligencePayload(payload)}`;
     await navigator.clipboard.writeText(link);
   }
 
