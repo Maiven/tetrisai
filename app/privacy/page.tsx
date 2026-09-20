@@ -32,6 +32,13 @@ export default function PrivacyPage() {
       </section>
 
       <section>
+        <h2>Candidate Diligence Share Link</h2>
+        <p>회사에 보내는 요청 링크에는 사용자가 선택한 실사 질문만 포함되며, 사용자의 원래 고민·AI 분석·Decision Passport 전체는 포함되지 않습니다.</p>
+        <p>현재 Share Link v1은 서버 DB에 요청·응답을 별도로 저장하지 않는 stateless 방식입니다. 대신 응답 링크 자체에 답변 내용이 인코딩되어 있으므로 <b>링크를 가진 사람은 그 답변을 읽을 수 있습니다.</b> 비공개 재무·고객·계약·영업비밀은 응답 링크에 입력하면 안 됩니다.</p>
+        <p>또한 Share Link는 응답자의 실제 신원을 인증하지 않습니다. 돌아온 답변은 먼저 ‘확인 필요’ 상태로 가져오며, 사용자가 출처와 내용을 확인한 뒤에만 구체적 증거로 분류하도록 설계했습니다.</p>
+      </section>
+
+      <section>
         <h2>사업화 이후에도 지킬 원칙</h2>
         <div className="legalGrid">
           <div><b>Employee-controlled</b><p>개인 모드의 데이터 통제권은 직원에게 둡니다.</p></div>
@@ -46,7 +53,7 @@ export default function PrivacyPage() {
         <p>반대편은 회사의 생존 가능성, 미래 기업가치, 스톡옵션 수익을 예측하지 않습니다. 커리어·법률·세무·투자 관련 중요한 결정은 공식 문서와 관련 전문가의 검토를 함께 사용하세요.</p>
       </section>
 
-      <p className="legalDate">MVP privacy note · 2026-09-18</p>
+      <p className="legalDate">Privacy note · 2026-09-20</p>
     </main>
   );
 }
