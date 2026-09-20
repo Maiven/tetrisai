@@ -150,6 +150,7 @@ export default function Home() {
     initialLean: '선택 안 함',
   });
   const [result, setResult] = useState<ApiResult | null>(null);
+  const [previousResult, setPreviousResult] = useState<ApiResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [copied, setCopied] = useState(false);
@@ -210,7 +211,7 @@ export default function Home() {
     const activeContext = sample ? SAMPLE_CONTEXT : context;
     if (sample) setContext(SAMPLE_CONTEXT);
     setQuestion(q || SAMPLE);
-    if (verifiedEvidence.length === 0 && publicEvidence.length === 0) {
+    if (verifiedEvidence.length === 0 && publicEvidence.length === 0 && transparencySignals.length === 0) {
       setReflection('');
       setEvidenceNotes({});
       setResponseSignals({});
@@ -238,6 +239,8 @@ export default function Home() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || '분석에 실패했습니다.');
+      const isReDiligence = verifiedEvidence.length > 0 || publicEvidence.length > 0 || transparencySignals.length > 0;
+      setPreviousResult(isReDiligence && result ? result : null);
       setResult(data);
       setResultDepth('essential');
       requestAnimationFrame(() => resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
@@ -781,7 +784,7 @@ export default function Home() {
                   <button className={resultDepth === 'full' ? 'active' : ''} onClick={() => setResultDepth('full')}>전체 실사</button>
                 </div>
                 <button onClick={copySummary}>{copied ? '복사 완료 ✓' : '실사 카드 복사'}</button>
-                <button onClick={() => { setResult(null); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>새 결정</button>
+                <button onClick={() => { setResult(null); setPreviousResult(null); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>새 결정</button>
               </div>
             </header>
 
@@ -793,6 +796,8 @@ export default function Home() {
 
             <DecisionGap items={result.analysis.startupDiligence} onCopyPack={copyQuestionPack} onCopyRequest={copyDiligenceRequest} />
 
+            {previousResult && <DecisionDelta before={previousResult.analysis} after={result.analysis} />}
+
             <div className="activationBrief">
               <div><span>NEXT CHECK</span><b>{result.analysis.decisionCard.nextCheck}</b></div>
               <div><span>FIRST 10 MIN</span><b>{result.analysis.verificationSprint[0]?.action}</b></div>
@@ -802,6 +807,8 @@ export default function Home() {
             {result.ontologyGraph && <EvidenceCoverage graph={result.ontologyGraph} />}
 
             <EvidenceStandard />
+
+            <EvidenceRouter />
 
             <div className="relianceGuardrail">
               <span>AI RELIANCE GUARDRAIL</span>
@@ -866,7 +873,7 @@ export default function Home() {
                 <div><strong>{evidenceCount}</strong><span>/ 5 verified</span></div>
                 <small>구체적 답변 · 마찰 신호 {frictionCount}</small>
               </div>
-              <button disabled={loading || evidenceCount === 0} onClick={reanalyzeWithEvidence}>
+              <button disabled={loading || (evidenceCount === 0 && frictionCount === 0)} onClick={reanalyzeWithEvidence}>
                 {loading ? '재실사 중…' : '새 증거로 다시 실사 →'}
               </button>
               {evidenceLoopMessage && <p className="evidenceLoopMessage">{evidenceLoopMessage}</p>}
@@ -1110,6 +1117,123 @@ export default function Home() {
         </div>
       )}
     </main>
+  );
+}
+
+function DecisionDelta({ before, after }: { before: Analysis; after: Analysis }) {
+  const beforeMap = new Map(before.startupDiligence.map((x) => [x.dimension, x]));
+  const changes = after.startupDiligence
+    .map((next) => {
+      const prev = beforeMap.get(next.dimension);
+      if (!prev) return null;
+      const statusChanged = prev.status !== next.status;
+      const evidenceChanged = prev.missingEvidence !== next.missingEvidence || prev.signal !== next.signal;
+      if (!statusChanged && !evidenceChanged) return null;
+      return { prev, next, statusChanged };
+    })
+    .filter(Boolean) as { prev: DiligenceItem; next: DiligenceItem; statusChanged: boolean }[];
+
+  return (
+    <article className="decisionDelta">
+      <div className="deltaHead">
+        <div>
+          <p className="panelLabel">DECISION DELTA · WHAT CHANGED</p>
+          <h3>새 정보가 들어온 뒤 판단 구조가 어떻게 달라졌는지 보여줍니다.</h3>
+        </div>
+        <span>{changes.length}개 Lens 업데이트</span>
+      </div>
+      {changes.length > 0 ? (
+        <div className="deltaGrid">
+          {changes.map(({ prev, next, statusChanged }) => (
+            <div key={next.dimension}>
+              <b>{next.dimension}</b>
+              <div className="deltaStatus">
+                <span>{prev.status}</span><i>→</i><span className="after">{next.status}</span>
+              </div>
+              <p>{statusChanged ? next.signal : next.missingEvidence}</p>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p className="deltaNoChange">Lens 상태는 아직 바뀌지 않았습니다. 이는 새 정보가 쓸모없다는 뜻이 아니라, 핵심 미확인이 아직 닫히지 않았다는 뜻입니다.</p>
+      )}
+      {before.realQuestion !== after.realQuestion && (
+        <div className="deltaQuestion"><small>REAL QUESTION UPDATED</small><p>{after.realQuestion}</p></div>
+      )}
+    </article>
+  );
+}
+
+function EvidenceRouter() {
+  const routes = [
+    {
+      lens: '회사 생존 신호',
+      best: '회사 공식자료 → 사모시장 데이터 → 공개 채용 신호',
+      links: [
+        ['PitchBook', 'https://pitchbook.com/use-cases/due-diligence'],
+        ['Crunchbase', 'https://www.crunchbase.com/'],
+        ['Wellfound', 'https://wellfound.com/'],
+      ],
+      note: '투자유치 기사는 생존 보장이 아닙니다. 최신성과 출처를 확인하세요.',
+    },
+    {
+      lens: '역할·팀 구조',
+      best: '직속리더 → 공개 org chart → 채용공고',
+      links: [
+        ['The Org', 'https://theorg.com/for-candidates'],
+        ['Wellfound', 'https://wellfound.com/jobs/'],
+      ],
+      note: '직함보다 reporting line·의사결정권·첫 90일 결과를 확인하세요.',
+    },
+    {
+      lens: '현금·보상',
+      best: '오퍼 문서 → 시장 benchmark → 협상 전문가',
+      links: [
+        ['Levels.fyi', 'https://www.levels.fyi/'],
+        ['Wellfound Salary Data', 'https://wellfound.com/hiring-data'],
+        ['Rora', 'https://www.teamrora.com/'],
+      ],
+      note: '시장 평균은 내 역할의 적정가를 자동으로 결정하지 않습니다.',
+    },
+    {
+      lens: '지분',
+      best: '부여계약·플랜 문서 → 공식 규정 → 전문 도구/전문가',
+      links: [
+        ['Secfi', 'https://secfi.com/tools/equity-planner'],
+        ['Carta', 'https://carta.com/'],
+      ],
+      note: '옵션 개수나 미래 기업가치만으로 현금처럼 평가하지 마세요.',
+    },
+    {
+      lens: '문화·리더십',
+      best: '현직자 실제 사례 → 조직 구조 → 다수의 후기',
+      links: [
+        ['Blind', 'https://www.teamblind.com/'],
+        ['Glassdoor', 'https://www.glassdoor.com/'],
+        ['Welcome to the Jungle', 'https://www.welcometothejungle.com/en-GB'],
+      ],
+      note: '익명후기는 맥락 신호입니다. 한 리뷰를 내 팀의 미래 사실로 일반화하지 마세요.',
+    },
+  ] as const;
+
+  return (
+    <details className="evidenceRouter">
+      <summary>
+        <span><b>어디에서 확인해야 할까요?</b><small>전세계 서비스 사례를 바탕으로 Lens별 검증 출발점을 연결합니다.</small></span>
+        <em>Evidence Router 열기</em>
+      </summary>
+      <div className="routerGrid">
+        {routes.map((route) => (
+          <article key={route.lens}>
+            <span>{route.lens}</span>
+            <b>{route.best}</b>
+            <div>{route.links.map(([label, url]) => <a key={url} href={url} target="_blank" rel="noreferrer">{label} ↗</a>)}</div>
+            <small>{route.note}</small>
+          </article>
+        ))}
+      </div>
+      <p className="routerNotice">외부 서비스는 검증 출발점의 예시이며 반대편과의 제휴를 의미하지 않습니다. 유료·로그인·지역 제한이 있을 수 있습니다.</p>
+    </details>
   );
 }
 
