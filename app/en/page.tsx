@@ -51,6 +51,8 @@ type Analysis = {
   riskNotice: string;
 };
 
+type GlobalResponseSignal = 'not_asked' | 'concrete' | 'vague' | 'declined';
+
 type Result = {
   mode: 'ai' | 'fallback' | 'sample';
   model: string;
@@ -187,6 +189,7 @@ export default function GlobalPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [evidenceNotes, setEvidenceNotes] = useState<Record<string, string>>({});
+  const [responseSignals, setResponseSignals] = useState<Record<string, GlobalResponseSignal>>({});
   const [publicCompany, setPublicCompany] = useState('');
   const [publicWebsite, setPublicWebsite] = useState('');
   const [publicResearch, setPublicResearch] = useState<PublicResearch | null>(null);
@@ -196,8 +199,12 @@ export default function GlobalPage() {
   const resultsRef = useRef<HTMLElement | null>(null);
 
   const evidenceCount = useMemo(
-    () => Object.values(evidenceNotes).filter((x) => x.trim()).length,
-    [evidenceNotes],
+    () => Object.values(responseSignals).filter((x) => x === 'concrete').length,
+    [responseSignals],
+  );
+  const frictionCount = useMemo(
+    () => Object.values(responseSignals).filter((x) => x === 'vague' || x === 'declined').length,
+    [responseSignals],
   );
 
   useEffect(() => {
@@ -209,6 +216,7 @@ export default function GlobalPage() {
         setQuestion(data.question);
         if (data.context) setContext(data.context);
         if (data.evidenceNotes) setEvidenceNotes(data.evidenceNotes);
+        if (data.responseSignals) setResponseSignals(data.responseSignals);
         setSaved(true);
       }
     } catch {
@@ -238,6 +246,7 @@ export default function GlobalPage() {
     value?: string,
     verifiedEvidence: string[] = [],
     publicEvidence: string[] = publicEvidencePayload(),
+    transparencySignals: string[] = [],
   ) {
     const q = (value ?? question).trim();
     setError('');
@@ -256,6 +265,7 @@ export default function GlobalPage() {
           context: contextPayload(),
           verifiedEvidence,
           publicEvidence,
+          transparencySignals,
           sourceExcerpt,
           language: 'en',
         }),
@@ -277,14 +287,31 @@ export default function GlobalPage() {
   }
 
   async function reanalyze() {
-    const verified = Object.entries(evidenceNotes)
-      .filter(([, value]) => value.trim())
-      .map(([dimension, value]) => `${dimension}: ${value.trim()}`);
-    if (!verified.length) {
-      setError('Add at least one piece of real-world evidence first.');
+    const verified = Object.entries(responseSignals)
+      .filter(([, signal]) => signal === 'concrete')
+      .map(([dimension]) => {
+        const note = evidenceNotes[dimension]?.trim();
+        return `${dimension}: concrete answer received${note ? ` · ${note}` : ''}`;
+      });
+
+    const transparency = Object.entries(responseSignals)
+      .filter(([, signal]) => signal === 'vague' || signal === 'declined')
+      .map(([dimension, signal]) => {
+        const label = signal === 'vague' ? 'vague answer' : 'answer declined';
+        const note = evidenceNotes[dimension]?.trim();
+        return `${dimension}: ${label}${note ? ` · ${note}` : ''}`;
+      });
+
+    for (const [dimension, note] of Object.entries(evidenceNotes)) {
+      if (!note.trim() || responseSignals[dimension]) continue;
+      transparency.push(`${dimension}: user note with unclassified verification level · ${note.trim()}`);
+    }
+
+    if (!verified.length && !transparency.length) {
+      setError('Mark how the company responded, or add an anonymized note about what you learned.');
       return;
     }
-    await analyze(question, verified);
+    await analyze(question, verified, publicEvidencePayload(), transparency);
   }
 
   async function researchPublicEvidence() {
@@ -322,6 +349,7 @@ export default function GlobalPage() {
         question,
         context,
         evidenceNotes,
+        responseSignals,
         savedAt: new Date().toISOString(),
         revisitAt: new Date(Date.now() + 7 * 86400000).toISOString(),
       }));
@@ -519,19 +547,35 @@ export default function GlobalPage() {
                     </div>
                     <label className="globalEvidenceNote">
                       <span>What did you actually learn?</span>
+                      <div className="globalResponseSignal">
+                        {[
+                          ['not_asked', 'Not asked'],
+                          ['concrete', 'Concrete'],
+                          ['vague', 'Vague'],
+                          ['declined', 'Declined'],
+                        ].map(([value, label]) => (
+                          <button
+                            key={value}
+                            className={(responseSignals[x.dimension] ?? 'not_asked') === value ? 'active' : ''}
+                            onClick={() => setResponseSignals({ ...responseSignals, [x.dimension]: value as GlobalResponseSignal })}
+                          >
+                            {label}
+                          </button>
+                        ))}
+                      </div>
                       <textarea
                         maxLength={300}
                         value={evidenceNotes[x.dimension] ?? ''}
                         onChange={(e) => setEvidenceNotes({ ...evidenceNotes, [x.dimension]: e.target.value })}
-                        placeholder="Example: recruiter gave a concrete milestone / manager could not define decision rights."
+                        placeholder="Anonymized note: specific milestone shared / answer remained vague / authority narrower than expected."
                       />
                     </label>
                   </article>
                 ))}
               </div>
               <div className="globalEvidenceLoop">
-                <div><strong>{evidenceCount}</strong><span>/ 5 lenses with new evidence</span></div>
-                <p>Once reality gives you new information, do not keep the old answer. Re-run the diligence.</p>
+                <div><strong>{evidenceCount}</strong><span>/ 5 with concrete answers</span></div>
+                <p>Response friction: {frictionCount}. Vague or declined answers are signals to investigate, not proof that the company is bad.</p>
                 <button onClick={reanalyze} disabled={!evidenceCount || loading}>Re-diligence with new evidence →</button>
               </div>
             </section>
