@@ -38,6 +38,11 @@ type Analysis = {
       questionToAsk: string;
       askWho: '채용담당자' | '직속리더' | '현직자' | '공식문서/전문가';
     }[];
+    readinessFit: {
+      state: '정렬 가능' | '개인 우위·조직 지연 가능' | '조직 우위·개인 적응 필요' | '양쪽 초기' | '정보 부족';
+      note: string;
+      verify: string;
+    };
     twelveMonthScenario: { moreHuman: string; moreAI: string; watchFor: string };
     axRule: string;
   };
@@ -105,6 +110,7 @@ type Context = {
   initialLean: string;
   region: string;
   aiChange: string;
+  personalAI: string;
 };
 
 const DIMENSION: Record<Dimension, string> = {
@@ -230,6 +236,7 @@ const defaultContext: Context = {
   initialLean: 'Not sure yet',
   region: 'Not specified',
   aiChange: 'Not specified',
+  personalAI: 'Not specified',
 };
 
 export default function GlobalPage() {
@@ -323,6 +330,7 @@ export default function GlobalPage() {
       initialLean: context.initialLean,
       region: context.region === 'Not specified' ? '' : context.region,
       aiChange: context.aiChange === 'Not specified' ? '' : context.aiChange,
+      personalAI: context.personalAI === 'Not specified' ? '' : context.personalAI,
     };
   }
 
@@ -602,6 +610,7 @@ export default function GlobalPage() {
                   <GlobalSelect label="Company size" value={context.headcount} options={['Not specified','1–19','20–100','101–250','251+','Unknown']} onChange={(v) => setContext({ ...context, headcount: v })} />
                   <GlobalSelect label="My current lean" value={context.initialLean} options={['Not sure yet','Leaning yes / accept','Leaning no / stay','Leaning toward another option']} onChange={(v) => setContext({ ...context, initialLean: v })} />
                   <GlobalSelect label="AX / AI work change" value={context.aiChange} options={['Not specified','Some AI tools only','Some tasks automated','Agent workflow in production','Role / process redesign underway','Unknown']} onChange={(v) => setContext({ ...context, aiChange: v })} />
+                  <GlobalSelect label="My AI work practice" value={context.personalAI} options={['Not specified','Rarely use AI','Use AI as a personal copilot','Automate repeatable work','Design / operate agent workflows','Not sure']} onChange={(v) => setContext({ ...context, personalAI: v })} />
                 </div>
                 <label className="globalSourceInput">
                   <span>Public job description or sanitized offer summary · optional</span>
@@ -1011,6 +1020,14 @@ const AX_MODE: Record<Analysis['axAudit']['exposureMode'], string> = {
   '정보 부족': 'Insufficient evidence',
 };
 
+const AX_FIT: Record<Analysis['axAudit']['readinessFit']['state'], string> = {
+  '정렬 가능': 'Potentially aligned',
+  '개인 우위·조직 지연 가능': 'Individual ahead · organization may lag',
+  '조직 우위·개인 적응 필요': 'Organization ahead · individual adaptation needed',
+  '양쪽 초기': 'Both still early',
+  '정보 부족': 'Insufficient evidence',
+};
+
 function GlobalAXRoleAudit({
   audit,
   onCopyQuestion,
@@ -1027,6 +1044,12 @@ function GlobalAXRoleAudit({
           <p>{audit.exposureNote}</p>
         </div>
         <span className="axMode">{AX_MODE[audit.exposureMode]}</span>
+      </div>
+
+      <div className="axFit">
+        <div><span>INDIVIDUAL × ORGANIZATION FIT</span><b>{AX_FIT[audit.readinessFit.state]}</b></div>
+        <p>{audit.readinessFit.note}</p>
+        <small>{audit.readinessFit.verify}</small>
       </div>
 
       <div className="axAuditGrid">
