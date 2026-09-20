@@ -654,6 +654,28 @@ export default function Home() {
         <p className="valueCaveat">※ “의사결정 정확도가 몇 % 향상된다”는 검증되지 않은 효과를 주장하지 않습니다. 현재 MVP가 직접 만드는 가치는 <b>미확인 정보의 가시화, 질문 생성, 실제 확인 행동의 구조화</b>입니다.</p>
       </section>
 
+      <section className="categoryThesis section">
+        <p className="eyebrow">NEW VALUE · CANDIDATE DILIGENCE PROTOCOL</p>
+        <h2>정보를 더 보여주는 서비스가 아니라,<br />후보자와 회사 사이의 <em>증거 교환 방식</em>을 만듭니다.</h2>
+        <p className="sectionLead">기존 도구는 중요한 조각을 각각 잘 해결합니다. 반대편은 그 조각을 대체하기보다, <b>“내 오퍼에서 무엇이 아직 증명되지 않았고 → 누구에게 무엇을 물으며 → 회사가 어떻게 답했고 → 그 답으로 내 판단이 어떻게 바뀌는가”</b>를 하나의 workflow로 연결합니다.</p>
+        <div className="categoryGrid">
+          <article><span>REVIEWS</span><h3>다른 사람의 과거 경험</h3><p>회사에 대한 맥락을 얻는 데 유용하지만, 지금 내 오퍼의 역할·권한·조건을 직접 증명하지는 않습니다.</p></article>
+          <article><span>BENCHMARKS</span><h3>시장의 보상 기준</h3><p>연봉·지분을 비교하는 데 중요하지만, 리더 행동이나 실제 의사결정권 같은 비정형 조건은 남습니다.</p></article>
+          <article><span>AI / COACHING</span><h3>생각과 전략의 구조화</h3><p>판단을 정리하는 데 도움을 주지만, 회사 내부의 미확인 사실은 결국 현실에서 확인해야 합니다.</p></article>
+          <article className="categoryCore"><span>BANDAEPYEON</span><h3>Evidence Exchange</h3><p><b>질문 → 답변 품질 → 증거 → 재실사</b>를 연결해 정보 비대칭이 실제로 줄어드는 과정을 만듭니다.</p></article>
+        </div>
+        <div className="categoryProtocol">
+          <div><i>1</i><b>Candidate asks</b><span>표준 실사 질문을 보냄</span></div>
+          <em>→</em>
+          <div><i>2</i><b>Company responds</b><span>구체적·모호·비공개를 구분</span></div>
+          <em>→</em>
+          <div><i>3</i><b>Evidence updates</b><span>증거와 투명성 신호를 분리</span></div>
+          <em>→</em>
+          <div><i>4</i><b>Decision updates</b><span>기존 결론을 다시 검증</span></div>
+        </div>
+        <p className="categoryResearch">2026년 AEJ: Applied Economics의 스타트업 구직 실험에서는 회사 품질 정보가 제공되자 실제 지원이 더 높은 평가를 받은 기업 쪽으로 이동했습니다. 정보마찰이 단순한 불편이 아니라 <b>인재 배분을 바꾸는 문제</b>라는 직접적인 근거입니다. <a href="https://www.aeaweb.org/articles?id=10.1257%2Fapp.20240722" target="_blank" rel="noreferrer">연구 보기 ↗</a></p>
+      </section>
+
       <section className="how section" id="how">
         <p className="eyebrow">STARTUP 5-LENS + FALSIFICATION</p>
         <h2>스타트업 커리어 결정을<br />투자 실사처럼 검증합니다.</h2>
