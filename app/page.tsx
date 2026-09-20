@@ -11,6 +11,7 @@ type DiligenceItem = {
   signal: string;
   missingEvidence: string;
   questionToAsk: string;
+  askWho: '채용담당자' | '직속리더' | '현직자' | '공식문서/전문가';
 };
 type StartupContext = { decisionType: string; stage: string; role: string; headcount: string; initialLean: string };
 type Analysis = {
@@ -1014,6 +1015,7 @@ function DecisionGap({
         {top.map((x, i) => (
           <div key={x.dimension}>
             <span>{String(i + 1).padStart(2, '0')} · {x.dimension}</span>
+            <small className="askWho">누구에게 · {x.askWho}</small>
             <p>{x.questionToAsk}</p>
           </div>
         ))}
