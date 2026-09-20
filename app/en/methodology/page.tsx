@@ -47,6 +47,29 @@ export default function EnglishMethodologyPage() {
       </section>
 
       <section>
+        <h2>AX Role Reality · AI Transformation</h2>
+        <p>Bandaepyeon does not measure AX by counting AI licenses. It audits how AI changes the work system the candidate is about to enter: work redesign, delegation depth, human agency, organizational readiness, skill trajectory, and quality/accountability.</p>
+        <div className="legalGrid">
+          <div><b>Work redesign</b><p>Which workflow steps, handoffs, and role boundaries have actually changed?</p></div>
+          <div><b>Delegation depth</b><p>NON-AX → information processing → bounded task execution → goal-based planning/execution, only when evidence supports it.</p></div>
+          <div><b>Human agency</b><p>Which decisions, exceptions, approvals, and outcomes remain human-owned?</p></div>
+          <div><b>Organization readiness</b><p>Sanctioned tools, data access, governance, manager support, and repeatable workflows.</p></div>
+          <div><b>Skill trajectory</b><p>Whether AI use builds durable judgment and expertise or merely increases delegation.</p></div>
+          <div><b>Quality & accountability</b><p>How AI-assisted work is evaluated, reviewed, escalated, and owned.</p></div>
+        </div>
+        <p>ILO research is used as a guardrail: AI exposure is a signal of possible task transformation, not a direct forecast of layoffs. KIET's 2026 task-delegation framework informs the Delegation Depth model; Microsoft 2026 informs the individual × organization readiness mismatch; NBER, Deloitte, McKinsey, PwC, and Stanford inform the distinction between tool access and real work redesign.</p>
+        <div className="officialLinks">
+          <a href="https://www.ilo.org/publications/generative-ai-and-jobs-2025-update" target="_blank" rel="noreferrer">ILO ↗</a>
+          <a href="https://www.kiet.re.kr/research/economyDetailView?detail_no=3237" target="_blank" rel="noreferrer">KIET ↗</a>
+          <a href="https://www.microsoft.com/en-us/worklab/work-trend-index/agents-human-agency-and-the-opportunity-for-every-organization" target="_blank" rel="noreferrer">Microsoft WTI ↗</a>
+          <a href="https://www.nber.org/papers/w33795" target="_blank" rel="noreferrer">NBER ↗</a>
+          <a href="https://www.deloitte.com/us/en/insights/industry/technology/path-to-agentic-transformation.html" target="_blank" rel="noreferrer">Deloitte ↗</a>
+          <a href="https://www.pwc.com/gx/en/1/services/ai/ai-jobs-barometer.html" target="_blank" rel="noreferrer">PwC ↗</a>
+          <a href="https://hai.stanford.edu/ai-index/2026-ai-index-report/economy" target="_blank" rel="noreferrer">Stanford AI Index ↗</a>
+        </div>
+      </section>
+
+      <section>
         <h2>Evidence Loop</h2>
         <ol>
           <li>Frame the decision and current hypothesis.</li>
