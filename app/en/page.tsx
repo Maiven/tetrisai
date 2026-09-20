@@ -335,6 +335,20 @@ export default function GlobalPage() {
     await navigator.clipboard.writeText(text);
   }
 
+  async function copyDiligenceRequest(items: DiligenceItem[]) {
+    const rank: Record<DiligenceItem['status'], number> = { '검증 우선': 0, '정보 부족': 1, '주의': 2, '확인됨': 3 };
+    const top = [...items].sort((a, b) => rank[a.status] - rank[b.status]).slice(0, 3);
+    const request = [
+      'Hi — I am reviewing the offer and want to make sure I understand the role and expectations accurately before I decide. Could I clarify three things?',
+      '',
+      ...top.map((x, i) => `${i + 1}. ${x.questionToAsk}`),
+      '',
+      'I am not asking for confidential information. Concrete examples or the most specific shareable answer would be very helpful.',
+      'Thank you.',
+    ].join('\n');
+    await navigator.clipboard.writeText(request);
+  }
+
   async function copyQuestionPack(items: DiligenceItem[]) {
     const rank: Record<DiligenceItem['status'], number> = { '검증 우선': 0, '정보 부족': 1, '주의': 2, '확인됨': 3 };
     const top = [...items].sort((a, b) => rank[a.status] - rank[b.status]).slice(0, 3);
@@ -478,7 +492,7 @@ export default function GlobalPage() {
               <button onClick={() => { setResult(null); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>New decision</button>
             </header>
 
-            <GlobalDecisionGap items={result.analysis.startupDiligence} onCopyPack={copyQuestionPack} />
+            <GlobalDecisionGap items={result.analysis.startupDiligence} onCopyPack={copyQuestionPack} onCopyRequest={copyDiligenceRequest} />
 
             <div className="globalNextRow">
               <article><span>NEXT CHECK</span><b>{result.analysis.decisionCard.nextCheck}</b></article>
@@ -627,9 +641,11 @@ export default function GlobalPage() {
 function GlobalDecisionGap({
   items,
   onCopyPack,
+  onCopyRequest,
 }: {
   items: DiligenceItem[];
   onCopyPack: (items: DiligenceItem[]) => void;
+  onCopyRequest: (items: DiligenceItem[]) => void;
 }) {
   const rank: Record<DiligenceItem['status'], number> = { '검증 우선': 0, '정보 부족': 1, '주의': 2, '확인됨': 3 };
   const top = [...items].sort((a, b) => rank[a.status] - rank[b.status]).slice(0, 3);
@@ -651,7 +667,10 @@ function GlobalDecisionGap({
           </div>
         ))}
       </div>
-      <button onClick={() => onCopyPack(items)}>Copy the 3 questions I should ask today →</button>
+      <div className="decisionGapActions">
+        <button onClick={() => onCopyPack(items)}>Copy 3 questions</button>
+        <button className="primary" onClick={() => onCopyRequest(items)}>Copy a recruiter-ready diligence request →</button>
+      </div>
     </article>
   );
 }
