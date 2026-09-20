@@ -95,8 +95,11 @@ type SavedPassport = {
   context: StartupContext;
   evidenceNotes: Record<string, string>;
   responseSignals: Record<string, ResponseSignal>;
+  sourceExcerpt: string;
   savedAt: string;
   revisitAt: string;
+  reviewAt30: string;
+  reviewAt90: string;
 };
 
 const QUICK_STARTS = [
@@ -407,8 +410,11 @@ export default function Home() {
       context,
       evidenceNotes,
       responseSignals,
+      sourceExcerpt,
       savedAt: new Date().toISOString(),
       revisitAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+      reviewAt30: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+      reviewAt90: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString(),
     };
     try {
       window.localStorage.setItem('bandaepyeon:passport', JSON.stringify(saved));
@@ -425,6 +431,7 @@ export default function Home() {
     setContext(passport.context);
     setEvidenceNotes(passport.evidenceNotes || {});
     setResponseSignals(passport.responseSignals || {});
+    setSourceExcerpt(passport.sourceExcerpt || '');
     setPassportMessage('저장한 결정을 불러왔습니다. 새 증거를 추가하거나 다시 실사하세요.');
     document.getElementById('decision-input')?.focus();
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -504,7 +511,7 @@ export default function Home() {
                 <div>
                   <span>LOCAL DECISION PASSPORT</span>
                   <b>{passport.question}</b>
-                  <small>7일 재점검 · {new Date(passport.revisitAt).toLocaleDateString('ko-KR')}</small>
+                  <small>7일 실사 · {new Date(passport.revisitAt).toLocaleDateString('ko-KR')} · 30일 리뷰 · {passport.reviewAt30 ? new Date(passport.reviewAt30).toLocaleDateString('ko-KR') : '미설정'}</small>
                 </div>
                 <button onClick={restorePassport}>이어 실사 →</button>
                 <button className="passportDelete" onClick={deletePassport}>삭제</button>
