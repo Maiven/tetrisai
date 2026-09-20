@@ -15,6 +15,7 @@ type DiligenceItem = {
   signal: string;
   missingEvidence: string;
   questionToAsk: string;
+  askWho: '채용담당자' | '직속리더' | '현직자' | '공식문서/전문가';
 };
 
 type Analysis = {
@@ -113,6 +114,13 @@ const CLASSIFICATION: Record<Analysis['sourceAudit']['claims'][number]['classifi
   '문서상 약속': 'Documented promise',
   '구체 조건': 'Concrete term',
   '모호한 표현': 'Ambiguous wording',
+};
+
+const ASK_WHO: Record<DiligenceItem['askWho'], string> = {
+  '채용담당자': 'Recruiter / People team',
+  '직속리더': 'Hiring manager',
+  '현직자': 'Current employee',
+  '공식문서/전문가': 'Official docs / qualified expert',
 };
 
 const PUBLIC_LEVEL: Record<PublicResearch['research']['signals'][number]['evidenceLevel'], string> = {
@@ -491,7 +499,7 @@ export default function GlobalPage() {
                     <small>MISSING EVIDENCE</small>
                     <strong>{x.missingEvidence}</strong>
                     <div className="globalQuestion">
-                      <small>QUESTION TO ASK</small>
+                      <small>QUESTION TO ASK · {ASK_WHO[x.askWho]}</small>
                       <p>{x.questionToAsk}</p>
                       <button onClick={() => copyQuestion(x.questionToAsk)}>Copy</button>
                     </div>
@@ -638,6 +646,7 @@ function GlobalDecisionGap({
         {top.map((x, i) => (
           <div key={x.dimension}>
             <span>{String(i + 1).padStart(2, '0')} · {DIMENSION[x.dimension]}</span>
+            <small className="askWho">Ask · {ASK_WHO[x.askWho]}</small>
             <p>{x.questionToAsk}</p>
           </div>
         ))}
