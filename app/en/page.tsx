@@ -220,6 +220,7 @@ export default function GlobalPage() {
   const [context, setContext] = useState<Context>(defaultContext);
   const [sourceExcerpt, setSourceExcerpt] = useState('');
   const [result, setResult] = useState<Result | null>(null);
+  const [previousResult, setPreviousResult] = useState<Result | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [evidenceNotes, setEvidenceNotes] = useState<Record<string, string>>({});
@@ -307,6 +308,8 @@ export default function GlobalPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'The diligence could not be completed.');
+      const isReDiligence = verifiedEvidence.length > 0 || publicEvidence.length > 0 || transparencySignals.length > 0;
+      setPreviousResult(isReDiligence && result ? result : null);
       setResult(data);
       requestAnimationFrame(() => resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
     } catch (e) {
@@ -600,12 +603,16 @@ export default function GlobalPage() {
                 <h2>What you still need to know.</h2>
                 <p>{result.analysis.realQuestion}</p>
               </div>
-              <button onClick={() => { setResult(null); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>New decision</button>
+              <button onClick={() => { setResult(null); setPreviousResult(null); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>New decision</button>
             </header>
 
             <GlobalDecisionGap items={result.analysis.startupDiligence} onCopyPack={copyQuestionPack} onCopyRequest={copyDiligenceRequest} />
 
+            {previousResult && <GlobalDecisionDelta before={previousResult.analysis} after={result.analysis} />}
+
             <GlobalEvidenceStandard />
+
+            <GlobalEvidenceRouter />
 
             <div className="globalNextRow">
               <article><span>NEXT CHECK</span><b>{result.analysis.decisionCard.nextCheck}</b></article>
@@ -661,7 +668,7 @@ export default function GlobalPage() {
               <div className="globalEvidenceLoop">
                 <div><strong>{evidenceCount}</strong><span>/ 5 with concrete answers</span></div>
                 <p>Response friction: {frictionCount}. Vague or declined answers are signals to investigate, not proof that the company is bad.</p>
-                <button onClick={reanalyze} disabled={!evidenceCount || loading}>Re-diligence with new evidence →</button>
+                <button onClick={reanalyze} disabled={(evidenceCount === 0 && frictionCount === 0) || loading}>Re-diligence with new evidence →</button>
               </div>
             </section>
 
@@ -774,6 +781,123 @@ export default function GlobalPage() {
         </div>
       )}
     </main>
+  );
+}
+
+function GlobalDecisionDelta({ before, after }: { before: Analysis; after: Analysis }) {
+  const beforeMap = new Map(before.startupDiligence.map((x) => [x.dimension, x]));
+  const changes = after.startupDiligence
+    .map((next) => {
+      const prev = beforeMap.get(next.dimension);
+      if (!prev) return null;
+      const statusChanged = prev.status !== next.status;
+      const evidenceChanged = prev.missingEvidence !== next.missingEvidence || prev.signal !== next.signal;
+      if (!statusChanged && !evidenceChanged) return null;
+      return { prev, next, statusChanged };
+    })
+    .filter(Boolean) as { prev: DiligenceItem; next: DiligenceItem; statusChanged: boolean }[];
+
+  return (
+    <article className="decisionDelta globalDecisionDelta">
+      <div className="deltaHead">
+        <div>
+          <p className="panelLabel">DECISION DELTA · WHAT CHANGED</p>
+          <h3>See exactly how the decision structure changed after new evidence arrived.</h3>
+        </div>
+        <span>{changes.length} lenses updated</span>
+      </div>
+      {changes.length > 0 ? (
+        <div className="deltaGrid">
+          {changes.map(({ prev, next, statusChanged }) => (
+            <div key={next.dimension}>
+              <b>{DIMENSION[next.dimension]}</b>
+              <div className="deltaStatus">
+                <span>{STATUS[prev.status]}</span><i>→</i><span className="after">{STATUS[next.status]}</span>
+              </div>
+              <p>{statusChanged ? next.signal : next.missingEvidence}</p>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p className="deltaNoChange">The lens status has not changed yet. That does not mean the new information was useless; the material uncertainty may still be unresolved.</p>
+      )}
+      {before.realQuestion !== after.realQuestion && (
+        <div className="deltaQuestion"><small>REAL QUESTION UPDATED</small><p>{after.realQuestion}</p></div>
+      )}
+    </article>
+  );
+}
+
+function GlobalEvidenceRouter() {
+  const routes = [
+    {
+      lens: 'Company viability',
+      best: 'Company sources → private-market data → hiring signals',
+      links: [
+        ['PitchBook', 'https://pitchbook.com/use-cases/due-diligence'],
+        ['Crunchbase', 'https://www.crunchbase.com/'],
+        ['Wellfound', 'https://wellfound.com/'],
+      ],
+      note: 'Funding announcements are public signals, not proof of current runway.',
+    },
+    {
+      lens: 'Role & team structure',
+      best: 'Hiring manager → org chart → job description',
+      links: [
+        ['The Org', 'https://theorg.com/for-candidates'],
+        ['Wellfound', 'https://wellfound.com/jobs/'],
+      ],
+      note: 'Verify reporting lines, decision rights, and 90-day outcomes rather than relying on title alone.',
+    },
+    {
+      lens: 'Cash compensation',
+      best: 'Offer document → benchmark → human negotiation support',
+      links: [
+        ['Levels.fyi', 'https://www.levels.fyi/'],
+        ['Wellfound Salary Data', 'https://wellfound.com/hiring-data'],
+        ['Rora', 'https://www.teamrora.com/'],
+      ],
+      note: 'Market data is a benchmark, not an automatic fair-value answer for your exact role.',
+    },
+    {
+      lens: 'Equity',
+      best: 'Grant/plan docs → regulator → specialist tool or expert',
+      links: [
+        ['Secfi', 'https://secfi.com/tools/equity-planner'],
+        ['Carta', 'https://carta.com/'],
+      ],
+      note: 'Do not turn option count or hypothetical future valuation into cash-equivalent certainty.',
+    },
+    {
+      lens: 'Culture & leadership',
+      best: 'Current-employee examples → org structure → multiple review sources',
+      links: [
+        ['Glassdoor', 'https://www.glassdoor.com/'],
+        ['Blind', 'https://www.teamblind.com/'],
+        ['Welcome to the Jungle', 'https://www.welcometothejungle.com/en-GB'],
+      ],
+      note: 'Anonymous reviews are context signals. Verify role-specific claims with people closer to your actual team.',
+    },
+  ] as const;
+
+  return (
+    <details className="evidenceRouter globalEvidenceRouter">
+      <summary>
+        <span><b>Where should I verify this?</b><small>Route each unknown to the strongest available source.</small></span>
+        <em>Open Evidence Router</em>
+      </summary>
+      <div className="routerGrid">
+        {routes.map((route) => (
+          <article key={route.lens}>
+            <span>{route.lens}</span>
+            <b>{route.best}</b>
+            <div>{route.links.map(([label, url]) => <a key={url} href={url} target="_blank" rel="noreferrer">{label} ↗</a>)}</div>
+            <small>{route.note}</small>
+          </article>
+        ))}
+      </div>
+      <p className="routerNotice">External services are examples of verification starting points, not Bandaepyeon partners. Availability, pricing, and regional access may vary.</p>
+    </details>
   );
 }
 
