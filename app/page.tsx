@@ -1816,7 +1816,7 @@ function StartupDiligence({
   return (
     <article className="startupDiligence">
       <div className="diligenceHead">
-        <div><p className="panelLabel">STARTUP 5-LENS DUE DILIGENCE</p><h3>{resultDepth === 'essential' ? '가장 중요한 3개 질문부터 답변 상태를 기록하세요.' : '회사보다 먼저, 내 커리어가 투자할 곳을 실사합니다.'}</h3></div>
+        <div><p className="panelLabel">STARTUP 5-LENS DUE DILIGENCE</p><h3>회사보다 먼저, 내 커리어가 투자할 곳을 확인하고 답변 상태를 기록합니다.</h3></div>
         <span>Employee-side</span>
       </div>
       <div className="diligenceGrid">
