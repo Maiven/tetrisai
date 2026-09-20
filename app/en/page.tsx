@@ -251,6 +251,7 @@ export default function GlobalPage() {
         if (data.context) setContext(data.context);
         if (data.evidenceNotes) setEvidenceNotes(data.evidenceNotes);
         if (data.responseSignals) setResponseSignals(data.responseSignals);
+        if (typeof data.sourceExcerpt === 'string') setSourceExcerpt(data.sourceExcerpt);
         setSaved(true);
       }
     } catch {
@@ -384,8 +385,11 @@ export default function GlobalPage() {
         context,
         evidenceNotes,
         responseSignals,
+        sourceExcerpt,
         savedAt: new Date().toISOString(),
         revisitAt: new Date(Date.now() + 7 * 86400000).toISOString(),
+        reviewAt30: new Date(Date.now() + 30 * 86400000).toISOString(),
+        reviewAt90: new Date(Date.now() + 90 * 86400000).toISOString(),
       }));
       setSaved(true);
     } catch {
