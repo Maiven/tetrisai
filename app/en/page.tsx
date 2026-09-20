@@ -1,6 +1,7 @@
 'use client';
 
 import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
+import { decodeDiligencePayload, encodeDiligencePayload, type DiligenceResponsePayload } from '@/lib/diligence-share';
 
 type Dimension =
   | '회사 생존 신호'
@@ -51,7 +52,7 @@ type Analysis = {
   riskNotice: string;
 };
 
-type GlobalResponseSignal = 'not_asked' | 'concrete' | 'vague' | 'declined';
+type GlobalResponseSignal = 'not_asked' | 'concrete' | 'vague' | 'declined' | 'link_pending';
 
 type Result = {
   mode: 'ai' | 'fallback' | 'sample';
@@ -224,6 +225,7 @@ export default function GlobalPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [evidenceNotes, setEvidenceNotes] = useState<Record<string, string>>({});
+  const [importedResponseCount, setImportedResponseCount] = useState(0);
   const [responseSignals, setResponseSignals] = useState<Record<string, GlobalResponseSignal>>({});
   const [publicCompany, setPublicCompany] = useState('');
   const [publicWebsite, setPublicWebsite] = useState('');
@@ -239,6 +241,10 @@ export default function GlobalPage() {
   );
   const frictionCount = useMemo(
     () => Object.values(responseSignals).filter((x) => x === 'vague' || x === 'declined').length,
+    [responseSignals],
+  );
+  const pendingResponseCount = useMemo(
+    () => Object.values(responseSignals).filter((x) => x === 'link_pending').length,
     [responseSignals],
   );
 
@@ -258,6 +264,39 @@ export default function GlobalPage() {
     } catch {
       // local-only persistence is optional
     }
+  }, []);
+
+  useEffect(() => {
+    const token = new URLSearchParams(window.location.search).get('response');
+    if (!token) return;
+    const decoded = decodeDiligencePayload(token);
+    if (!decoded || decoded.type !== 'response' || decoded.returnPath !== '/en') return;
+
+    const roleLabel: Record<DiligenceResponsePayload['responderRole'], string> = {
+      recruiter: 'Recruiter / People',
+      hiring_manager: 'Hiring manager',
+      current_employee: 'Current employee',
+      other: 'Other responder',
+    };
+
+    const notes: Record<string, string> = {};
+    const signals: Record<string, GlobalResponseSignal> = {};
+    decoded.answers.forEach((answer) => {
+      const statusLabel =
+        answer.status === 'concrete' ? 'marked concrete by responder' :
+        answer.status === 'vague' ? 'marked partial/vague by responder' :
+        'marked unavailable/declined by responder';
+      notes[answer.dimension] = `[${roleLabel[decoded.responderRole]} · ${statusLabel}] ${answer.answer || 'No additional text'}`;
+      signals[answer.dimension] = 'link_pending';
+    });
+
+    setEvidenceNotes((prev) => ({ ...prev, ...notes }));
+    setResponseSignals((prev) => ({ ...prev, ...signals }));
+    setImportedResponseCount(decoded.answers.length);
+
+    const cleanUrl = new URL(window.location.href);
+    cleanUrl.searchParams.delete('response');
+    window.history.replaceState({}, '', `${cleanUrl.pathname}${cleanUrl.search}${cleanUrl.hash}`);
   }, []);
 
   function contextPayload() {
@@ -333,9 +372,12 @@ export default function GlobalPage() {
       });
 
     const transparency = Object.entries(responseSignals)
-      .filter(([, signal]) => signal === 'vague' || signal === 'declined')
+      .filter(([, signal]) => signal === 'vague' || signal === 'declined' || signal === 'link_pending')
       .map(([dimension, signal]) => {
-        const label = signal === 'vague' ? 'vague answer' : 'answer declined';
+        const label =
+          signal === 'vague' ? 'vague answer' :
+          signal === 'declined' ? 'answer declined' :
+          'external response link received; responder identity and answer quality not yet confirmed';
         const note = evidenceNotes[dimension]?.trim();
         return `${dimension}: ${label}${note ? ` · ${note}` : ''}`;
       });
@@ -436,6 +478,25 @@ export default function GlobalPage() {
     await navigator.clipboard.writeText(memo);
   }
 
+  async function createDiligenceShareLink(items: DiligenceItem[]) {
+    const rank: Record<DiligenceItem['status'], number> = { '검증 우선': 0, '정보 부족': 1, '주의': 2, '확인됨': 3 };
+    const top = [...items].sort((a, b) => rank[a.status] - rank[b.status]).slice(0, 3);
+    const requestId = typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : String(Date.now());
+    const payload = {
+      v: 1 as const,
+      type: 'request' as const,
+      requestId,
+      locale: 'en' as const,
+      createdAt: new Date().toISOString(),
+      expiresAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
+      returnPath: '/en' as const,
+      questions: top.map((x) => ({ dimension: x.dimension, question: x.questionToAsk, askWho: ASK_WHO[x.askWho] })),
+    };
+    savePassport();
+    const link = `${window.location.origin}/request?payload=${encodeDiligencePayload(payload)}`;
+    await navigator.clipboard.writeText(link);
+  }
+
   async function copyDiligenceRequest(items: DiligenceItem[]) {
     const rank: Record<DiligenceItem['status'], number> = { '검증 우선': 0, '정보 부족': 1, '주의': 2, '확인됨': 3 };
     const top = [...items].sort((a, b) => rank[a.status] - rank[b.status]).slice(0, 3);
@@ -494,6 +555,13 @@ export default function GlobalPage() {
               <div><span>02</span><b>Your flip conditions</b><small>What evidence should change your mind</small></div>
               <div><span>03</span><b>A 7-day evidence sprint</b><small>Move from AI output to real-world verification</small></div>
             </div>
+
+            {importedResponseCount > 0 && (
+              <div className="importedResponseBanner globalImportedResponse">
+                <div><span>EXTERNAL RESPONSE IMPORTED</span><b>{importedResponseCount} company responses are ready for review.</b><small>The responder identity is not authenticated. Classify each response before promoting it to evidence.</small></div>
+                <button onClick={() => document.getElementById('global-decision')?.focus()}>Review responses →</button>
+              </div>
+            )}
 
             <div className="globalProofRow">
               <span>No login</span><span>No recommendation score</span><span>Public evidence + real questions</span>
@@ -606,7 +674,12 @@ export default function GlobalPage() {
               <button onClick={() => { setResult(null); setPreviousResult(null); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>New decision</button>
             </header>
 
-            <GlobalDecisionGap items={result.analysis.startupDiligence} onCopyPack={copyQuestionPack} onCopyRequest={copyDiligenceRequest} />
+            <GlobalDecisionGap
+              items={result.analysis.startupDiligence}
+              onCopyPack={copyQuestionPack}
+              onCopyRequest={copyDiligenceRequest}
+              onCreateShare={createDiligenceShareLink}
+            />
 
             {previousResult && <GlobalDecisionDelta before={previousResult.analysis} after={result.analysis} />}
 
@@ -639,6 +712,9 @@ export default function GlobalPage() {
                     </div>
                     <label className="globalEvidenceNote">
                       <span>What did you actually learn?</span>
+                      {responseSignals[x.dimension] === 'link_pending' && (
+                        <p className="pendingExternalResponse">An external link response arrived. The responder is not authenticated; review the text and classify it yourself before treating it as evidence.</p>
+                      )}
                       <div className="globalResponseSignal">
                         {[
                           ['not_asked', 'Not asked'],
@@ -667,8 +743,8 @@ export default function GlobalPage() {
               </div>
               <div className="globalEvidenceLoop">
                 <div><strong>{evidenceCount}</strong><span>/ 5 with concrete answers</span></div>
-                <p>Response friction: {frictionCount}. Vague or declined answers are signals to investigate, not proof that the company is bad.</p>
-                <button onClick={reanalyze} disabled={(evidenceCount === 0 && frictionCount === 0) || loading}>Re-diligence with new evidence →</button>
+                <p>Concrete: {evidenceCount} · response friction: {frictionCount} · pending link responses: {pendingResponseCount}. Vague, declined, or unauthenticated answers are signals to investigate — not proof the company is bad.</p>
+                <button onClick={reanalyze} disabled={(evidenceCount === 0 && frictionCount === 0 && pendingResponseCount === 0) || loading}>Re-diligence with new evidence →</button>
               </div>
             </section>
 
@@ -999,10 +1075,12 @@ function GlobalDecisionGap({
   items,
   onCopyPack,
   onCopyRequest,
+  onCreateShare,
 }: {
   items: DiligenceItem[];
   onCopyPack: (items: DiligenceItem[]) => void;
   onCopyRequest: (items: DiligenceItem[]) => void;
+  onCreateShare: (items: DiligenceItem[]) => void;
 }) {
   const rank: Record<DiligenceItem['status'], number> = { '검증 우선': 0, '정보 부족': 1, '주의': 2, '확인됨': 3 };
   const top = [...items].sort((a, b) => rank[a.status] - rank[b.status]).slice(0, 3);
@@ -1024,10 +1102,12 @@ function GlobalDecisionGap({
           </div>
         ))}
       </div>
-      <div className="decisionGapActions">
-        <button onClick={() => onCopyPack(items)}>Copy 3 questions</button>
-        <button className="primary" onClick={() => onCopyRequest(items)}>Copy a recruiter-ready diligence request →</button>
+      <div className="decisionGapActions shareActions">
+        <button onClick={() => onCopyPack(items)}>Copy questions</button>
+        <button onClick={() => onCopyRequest(items)}>Copy message</button>
+        <button className="primary" onClick={() => onCreateShare(items)}>Create company response link →</button>
       </div>
+      <p className="sharePrivacyNote">The share link contains only the selected questions — not your private decision prompt or AI analysis.</p>
     </article>
   );
 }
