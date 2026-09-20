@@ -266,6 +266,24 @@ export default function Home() {
     setEvidenceLoopMessage('질문을 복사했습니다. 실제 담당자·리더·현직자에게 확인해보세요.');
   }
 
+  async function copyQuestionPack(items: DiligenceItem[]) {
+    const priority = [...items]
+      .sort((a, b) => {
+        const rank: Record<DiligenceItem['status'], number> = { '검증 우선': 0, '정보 부족': 1, '주의': 2, '확인됨': 3 };
+        return rank[a.status] - rank[b.status];
+      })
+      .slice(0, 3);
+    const pack = [
+      '반대편 · 오늘 확인할 질문 3개',
+      '',
+      ...priority.map((x, i) => `${i + 1}. [${x.dimension}] ${x.questionToAsk}`),
+      '',
+      '결론을 먼저 정하지 말고, 답을 받은 뒤 다시 판단하세요.',
+    ].join('\n');
+    await navigator.clipboard.writeText(pack);
+    setEvidenceLoopMessage('오늘 확인할 질문 3개를 한 번에 복사했습니다.');
+  }
+
   async function researchPublicEvidence() {
     setPublicError('');
     if (publicCompany.trim().length < 2) {
@@ -390,9 +408,15 @@ export default function Home() {
 
         <div className="heroGrid">
           <div className="copy">
-            <p className="eyebrow">EMPLOYEE-SIDE STARTUP DUE DILIGENCE</p>
-            <h1>입사·잔류·이직 전에,<br /><em>회사보다 내 결정을 먼저 실사하세요.</em></h1>
-            <p className="lead">스타트업은 정보가 부족한데 결정은 빠릅니다. 반대편은 회사·역할·리더·보상·학습의 다섯 영역에서 아직 증명되지 않은 것을 찾아 직원 편에서 결정을 검증합니다.</p>
+            <p className="eyebrow">STARTUP OFFER & CAREER DUE DILIGENCE</p>
+            <h1>스타트업 오퍼 받았나요?<br /><em>수락하기 전에, 아직 확인하지 못한 것을 찾으세요.</em></h1>
+            <p className="lead">연봉과 스톡옵션만 비교하면 가장 비싼 정보가 빠질 수 있습니다. 반대편은 <b>회사·실제 역할·리더·보상·학습</b>에서 무엇이 아직 증명되지 않았는지 찾고, 오늘 바로 물어볼 질문으로 바꿉니다.</p>
+
+            <div className="heroOutcomeStrip">
+              <div><span>01</span><b>오늘 물어볼 질문 3개</b><small>채용담당자·직속리더·현직자에게 바로 사용</small></div>
+              <div><span>02</span><b>생각을 뒤집을 조건</b><small>무엇이 확인되면 결론을 바꿀지 미리 정의</small></div>
+              <div><span>03</span><b>7일 검증 플랜</b><small>AI 조언이 아니라 실제 증거까지 연결</small></div>
+            </div>
 
             {passport && (
               <div className="passportResume">
@@ -416,7 +440,7 @@ export default function Home() {
             </div>
 
             <form className="decisionBox" onSubmit={submit}>
-              <label htmlFor="decision-input">지금 스타트업에서 고민하고 있는 결정을 적어보세요.</label>
+              <label htmlFor="decision-input">오퍼를 받았다면 그대로 적어보세요. 잔류·역할·스톡옵션 고민도 가능합니다.</label>
               <textarea
                 id="decision-input"
                 maxLength={700}
@@ -428,7 +452,7 @@ export default function Home() {
                     analyze();
                   }
                 }}
-                placeholder="예: 투자 지연이 반복되고 제 역할은 계속 넓어지는데, 지금 회사를 계속 다녀야 할까?"
+                placeholder="예: Series A 스타트업에서 연봉 15% 인상과 스톡옵션을 제안받았습니다. 수락 전에 무엇을 꼭 확인해야 할까요?"
               />
 
               <details className="contextDisclosure">
@@ -460,7 +484,7 @@ export default function Home() {
 
               <div className="decisionActions">
                 <span>{count}/700 · 회사명·실명·연락처·비공개 숫자 등 민감정보는 입력하지 마세요.</span>
-                <button type="submit" disabled={loading}>{loading ? '실사 중…' : '내 결정 실사하기 →'}</button>
+                <button type="submit" disabled={loading}>{loading ? '실사 중…' : '수락하기 전 실사하기 →'}</button>
               </div>
               {error && <p className="error">{error}</p>}
             </form>
@@ -624,7 +648,7 @@ export default function Home() {
             <div><span>01</span><b>Context Parsing</b><p>GPT-5.6 Sol이 결정 유형·직무·회사단계와 자유서술을 함께 해석합니다.</p></div>
             <div><span>02</span><b>Startup Ontology</b><p>회사·역할·리더·보상·학습의 5-Lens로 놓친 정보의 위치를 고정합니다.</p></div>
             <div><span>03</span><b>Human Agency</b><p>AI가 퇴사·입사를 대신 결정하지 않고 질문·검증·STOP RULE을 남깁니다.</p></div>
-            <div><span>04</span><b>Failure-safe</b><p>AI 호출 실패 시에도 로컬 실사 프레임워크와 즉시 데모로 핵심 경험을 유지합니다.</p></div>
+            <div><span>04</span><b>Failure-safe</b><p>AI 호출 실패 시에도 로컬 실사 프레임워크로 핵심 경험을 유지합니다.</p></div>
           </div>
           <div className="stackLine"><b>Built with</b><span>Next.js · React · OpenAI GPT-5.6 Sol · Vercel AI SDK · Vercel AI Gateway</span></div>
         </div>
@@ -656,6 +680,8 @@ export default function Home() {
               <h3>{question}</h3>
               <div className="reframe"><span>다시 정의한 진짜 질문</span><p>{result.analysis.realQuestion}</p></div>
             </article>
+
+            <DecisionGap items={result.analysis.startupDiligence} onCopyPack={copyQuestionPack} />
 
             <div className="activationBrief">
               <div><span>NEXT CHECK</span><b>{result.analysis.decisionCard.nextCheck}</b></div>
@@ -960,6 +986,40 @@ export default function Home() {
         </div>
       )}
     </main>
+  );
+}
+
+function DecisionGap({
+  items,
+  onCopyPack,
+}: {
+  items: DiligenceItem[];
+  onCopyPack: (items: DiligenceItem[]) => void;
+}) {
+  const ranked = [...items].sort((a, b) => {
+    const rank: Record<DiligenceItem['status'], number> = { '검증 우선': 0, '정보 부족': 1, '주의': 2, '확인됨': 3 };
+    return rank[a.status] - rank[b.status];
+  });
+  const unresolved = items.filter((x) => x.status !== '확인됨').length;
+  const top = ranked.slice(0, 3);
+
+  return (
+    <article className="decisionGap">
+      <div className="decisionGapLead">
+        <p className="panelLabel">DECISION GAP · BEFORE YOU SAY YES</p>
+        <h3>{unresolved > 0 ? `지금 결정하면 ${unresolved}개 영역의 미확인을 함께 떠안습니다.` : '핵심 5개 영역이 모두 확인된 상태입니다.'}</h3>
+        <p>먼저 아래 세 질문에 답을 받아보세요. 좋은 답보다 <b>구체적인 답</b>이 중요합니다.</p>
+      </div>
+      <div className="decisionGapQuestions">
+        {top.map((x, i) => (
+          <div key={x.dimension}>
+            <span>{String(i + 1).padStart(2, '0')} · {x.dimension}</span>
+            <p>{x.questionToAsk}</p>
+          </div>
+        ))}
+      </div>
+      <button onClick={() => onCopyPack(items)}>오늘 물어볼 질문 3개 한 번에 복사 →</button>
+    </article>
   );
 }
 
