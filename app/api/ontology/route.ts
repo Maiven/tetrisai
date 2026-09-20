@@ -33,6 +33,7 @@ export async function GET() {
           'VERIFIED_BY',
           'PUBLICLY_SUPPORTED_BY',
           'RESPONDED_WITH',
+          'TRANSFORMED_BY',
           'COULD_FLIP',
           'LEADS_TO_ACTION',
         ],
