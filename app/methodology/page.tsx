@@ -56,6 +56,61 @@ export default function MethodologyPage() {
       </section>
 
       <section>
+        <h2>AX Role Reality · AI Transformation</h2>
+        <p>반대편은 AX를 “AI 도구 보유량”으로 보지 않습니다. 최근 연구에서 반복되는 핵심은 <b>실제 업무 재설계, AI에게 위임되는 업무의 깊이, 인간의 판단권·책임, 조직 준비도, skill trajectory</b>입니다.</p>
+        <div className="legalGrid">
+          <div><b>Work redesign</b><p>AI 때문에 실제 업무 단계·handoff·인원 역할이 어떻게 바뀌었는지 확인합니다.</p></div>
+          <div><b>Delegation depth</b><p>NON_AX → 정보 처리 → 업무 수행 → 목표 기반 계획·수행까지 실제 위임 수준을 근거가 있을 때만 구분합니다.</p></div>
+          <div><b>Human agency</b><p>AI가 실행해도 사람이 최종 승인·예외처리·escalation·책임을 어디까지 갖는지 봅니다.</p></div>
+          <div><b>Organization readiness</b><p>승인 도구, 데이터 접근, 관리자 지원, 반복 가능한 workflow, governance를 확인합니다.</p></div>
+          <div><b>Skill trajectory</b><p>속도 향상이 장기 전문성 향상으로 이어지는지, 문제정의·판단·도메인 전문성이 커지는지 봅니다.</p></div>
+          <div><b>Quality & accountability</b><p>AI output의 QA 기준, 검토자, 오류 대응, 책임소재가 있는지 확인합니다.</p></div>
+        </div>
+        <div className="researchCards">
+          <article>
+            <span>ILO · 2025–2026</span>
+            <b>AI exposure는 일자리 상실 확률이 아닙니다.</b>
+            <p>ILO는 전 세계 일자리의 상당 부분이 GenAI에 노출될 수 있지만, 많은 경우 소멸보다 업무 변형이 더 가능하다고 보고하며 exposure 지표를 고용 결과 예측으로 직접 해석하지 말라고 경고합니다.</p>
+            <a href="https://www.ilo.org/publications/generative-ai-and-jobs-2025-update" target="_blank" rel="noreferrer">ILO, Generative AI and Jobs ↗</a>
+            <a href="https://www.ilo.org/publications/workers%E2%80%99-exposure-ai-what-indicators-tell-us-%E2%80%93-and-what-they-don%E2%80%99t" target="_blank" rel="noreferrer">ILO, What exposure indicators do and don't tell us ↗</a>
+          </article>
+          <article>
+            <span>MICROSOFT WORK TREND INDEX · 2026</span>
+            <b>개인이 AI를 잘 써도 조직이 못 받쳐주면 가치가 막힐 수 있습니다.</b>
+            <p>Microsoft는 개인 AI capability와 조직 readiness의 정렬 문제를 별도로 분석합니다. 반대편의 AX Fit은 이를 점수가 아니라 확인할 mismatch로 구현합니다.</p>
+            <a href="https://www.microsoft.com/en-us/worklab/work-trend-index/agents-human-agency-and-the-opportunity-for-every-organization" target="_blank" rel="noreferrer">Microsoft Work Trend Index 2026 ↗</a>
+          </article>
+          <article>
+            <span>KIET · TASK DELEGATION · 2026</span>
+            <b>AX의 핵심은 도입 여부보다 업무 위임의 깊이입니다.</b>
+            <p>산업연구원은 서비스업 AX를 NON_AX, 정보처리 위임, 업무 수행 위임, 목표 기반 계획·수행 위임으로 구분하는 프레임워크를 제안했습니다. 반대편은 이를 후보자 실사용에 맞게 Delegation Depth로 적용합니다.</p>
+            <a href="https://www.kiet.re.kr/research/economyDetailView?detail_no=3237" target="_blank" rel="noreferrer">산업연구원, 서비스업 AI 전환 측정 ↗</a>
+          </article>
+          <article>
+            <span>NBER · 66 FIRMS</span>
+            <b>AI 도구 제공만으로 업무 자체가 자동으로 재설계되지는 않았습니다.</b>
+            <p>7,137명 지식근로자를 포함한 현장실험에서는 생성형 AI 사용자가 이메일 시간을 줄였지만 개인 수준 도구 제공만으로 업무 구성 변화가 뚜렷하게 나타나지는 않았습니다.</p>
+            <a href="https://www.nber.org/papers/w33795" target="_blank" rel="noreferrer">NBER, Shifting Work Patterns with Generative AI ↗</a>
+          </article>
+          <article>
+            <span>DELOITTE / McKINSEY · 2026</span>
+            <b>Agentic AI의 병목은 기술보다 operating model이 될 수 있습니다.</b>
+            <p>두 기관의 2026 연구는 workflow, job design, decision rights, governance, workforce readiness를 함께 재설계해야 AI가 조직 수준의 가치로 이어진다는 점을 반복해서 강조합니다.</p>
+            <a href="https://www.deloitte.com/us/en/insights/industry/technology/path-to-agentic-transformation.html" target="_blank" rel="noreferrer">Deloitte, Path to Agentic Transformation ↗</a>
+            <a href="https://www.mckinsey.com/capabilities/people-and-organization/our-insights/the-key-to-ai-value-is-hiding-in-plain-sight-your-operating-model" target="_blank" rel="noreferrer">McKinsey, Operating Model ↗</a>
+          </article>
+          <article>
+            <span>PWC / STANFORD · 2026</span>
+            <b>AI 시대의 skill 변화는 빠르지만 효과는 직무·조직에 따라 다릅니다.</b>
+            <p>PwC는 AI 노출 직무의 skill 변화와 AI skill 보상 프리미엄을 보고하고, Stanford AI Index는 AI adoption 확대와 함께 agent 배포·생산성·노동시장 효과가 아직 고르게 나타나지 않는다고 정리합니다.</p>
+            <a href="https://www.pwc.com/gx/en/1/services/ai/ai-jobs-barometer.html" target="_blank" rel="noreferrer">PwC 2026 AI Jobs Barometer ↗</a>
+            <a href="https://hai.stanford.edu/ai-index/2026-ai-index-report/economy" target="_blank" rel="noreferrer">Stanford AI Index 2026 ↗</a>
+          </article>
+        </div>
+        <p><a href="https://www.law.go.kr/LSW/lsInfoP.do?lsiSeq=282791" target="_blank" rel="noreferrer">한국 인공지능기본법 ↗</a> · 고영향 AI에 해당하는 경우 위험관리·설명·사람의 관리감독 등 별도 의무가 적용될 수 있습니다. 반대편은 모든 AI 사용을 고영향 AI로 간주하지 않으며 실제 적용 여부는 공식 법령과 전문가 검토를 우선합니다.</p>
+      </section>
+
+      <section>
         <h2>Falsification + Evidence Loop</h2>
         <ol>
           <li>Initial hypothesis — 현재 기울기가 있으면 정답이 아니라 반증할 가설로 취급합니다.</li>
