@@ -14,7 +14,7 @@ type DiligenceItem = {
   questionToAsk: string;
   askWho: '채용담당자' | '직속리더' | '현직자' | '공식문서/전문가';
 };
-type StartupContext = { decisionType: string; stage: string; role: string; headcount: string; initialLean: string; aiChange: string };
+type StartupContext = { decisionType: string; stage: string; role: string; headcount: string; initialLean: string; aiChange: string; personalAI: string };
 type Analysis = {
   reframedDecision: string;
   realQuestion: string;
@@ -34,6 +34,11 @@ type Analysis = {
       questionToAsk: string;
       askWho: '채용담당자' | '직속리더' | '현직자' | '공식문서/전문가';
     }[];
+    readinessFit: {
+      state: '정렬 가능' | '개인 우위·조직 지연 가능' | '조직 우위·개인 적응 필요' | '양쪽 초기' | '정보 부족';
+      note: string;
+      verify: string;
+    };
     twelveMonthScenario: { moreHuman: string; moreAI: string; watchFor: string };
     axRule: string;
   };
@@ -146,6 +151,7 @@ const ROLES = ['선택 안 함', 'Product/PM', 'Data/AI', 'Engineering', 'Design
 const HEADCOUNTS = ['선택 안 함', '1~19명', '20~50명', '51~200명', '201명 이상', '모름'];
 const INITIAL_LEANS = ['선택 안 함', '실행/합류 쪽', '보류/잔류 쪽', '반대 선택지 쪽', '아직 모름'];
 const AI_CHANGES = ['선택 안 함', 'AI 도구만 일부 사용', '업무 일부 자동화', 'Agent workflow 운영', '역할·프로세스 재설계 중', 'AI 활용 수준 모름'];
+const PERSONAL_AI = ['선택 안 함', '거의 사용 안 함', '개인 보조도구로 사용', '반복 업무 자동화에 사용', 'Agent workflow를 직접 설계·운영', '내 수준을 잘 모르겠음'];
 
 const SAMPLE = '현재 직장은 안정적이지만 성장 속도가 느립니다. 연봉이 15% 높은 Series A 스타트업으로 이직 제안을 받았고 스톡옵션도 있습니다.';
 const SAMPLE_CONTEXT: StartupContext = {
@@ -155,6 +161,7 @@ const SAMPLE_CONTEXT: StartupContext = {
   headcount: '51~200명',
   initialLean: '실행/합류 쪽',
   aiChange: '역할·프로세스 재설계 중',
+  personalAI: '반복 업무 자동화에 사용',
 };
 
 export default function Home() {
@@ -166,6 +173,7 @@ export default function Home() {
     headcount: '선택 안 함',
     initialLean: '선택 안 함',
     aiChange: '선택 안 함',
+    personalAI: '선택 안 함',
   });
   const [result, setResult] = useState<ApiResult | null>(null);
   const [previousResult, setPreviousResult] = useState<ApiResult | null>(null);
@@ -642,6 +650,7 @@ export default function Home() {
                     <ContextSelect label="회사 규모" value={context.headcount} options={HEADCOUNTS} onChange={(v) => updateContext('headcount', v)} />
                     <ContextSelect label="분석 전 내 기울기" value={context.initialLean} options={INITIAL_LEANS} onChange={(v) => updateContext('initialLean', v)} />
                     <ContextSelect label="AX / AI 업무 변화" value={context.aiChange} options={AI_CHANGES} onChange={(v) => updateContext('aiChange', v)} />
+                    <ContextSelect label="내 AI 업무 방식" value={context.personalAI} options={PERSONAL_AI} onChange={(v) => updateContext('personalAI', v)} />
                   </div>
                   <p className="contextHint">초기 기울기는 AI가 맞춰줘야 할 답이 아니라, 반증할 <b>가설</b>로만 사용합니다.</p>
                   <label className="sourceExcerptInput">
@@ -1345,6 +1354,12 @@ function AXRoleAudit({
           <p>{audit.exposureNote}</p>
         </div>
         <span className={`axMode ax-${statusClass(audit.exposureMode)}`}>{audit.exposureMode}</span>
+      </div>
+
+      <div className="axFit">
+        <div><span>INDIVIDUAL × ORGANIZATION FIT</span><b>{audit.readinessFit.state}</b></div>
+        <p>{audit.readinessFit.note}</p>
+        <small>{audit.readinessFit.verify}</small>
       </div>
 
       <div className="axAuditGrid">
