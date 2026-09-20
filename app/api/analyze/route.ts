@@ -29,6 +29,8 @@ const analysisSchema = z.object({
   axAudit: z.object({
     exposureMode: z.enum(['증강 중심', '자동화 중심', '혼합', '정보 부족']),
     exposureNote: z.string(),
+    delegationLevel: z.enum(['NON_AX', 'LEVEL 1 정보 처리 위임', 'LEVEL 2 업무 수행 위임', 'LEVEL 3 목표 기반 계획·수행 위임', '정보 부족']),
+    delegationNote: z.string(),
     items: z.array(z.object({
       area: z.enum(['업무 재설계', '조직 준비도', '인간 판단·권한', '역량 궤적', '품질·책임']),
       status: z.enum(['확인됨', '주의', '정보 부족', '검증 우선']),
@@ -179,6 +181,8 @@ const SAMPLE_ANALYSIS: Analysis = {
   axAudit: {
     exposureMode: '정보 부족',
     exposureNote: '이 역할이 AI로 증강될지, 일부 업무가 자동화될지, 사람의 판단 범위가 커질지는 현재 정보만으로 알 수 없습니다. 회사의 실제 workflow 변화를 확인해야 합니다.',
+    delegationLevel: '정보 부족',
+    delegationNote: 'AI 도구 사용 여부만으로 업무 위임 수준을 판단하지 않습니다. 실제로 정보 처리·업무 수행·목표 기반 계획 중 어디까지 AI에 위임하는지 확인해야 합니다.',
     items: [
       {
         area: '업무 재설계',
@@ -321,6 +325,8 @@ function fallback(question: string): Analysis {
     axAudit: {
       exposureMode: '정보 부족',
       exposureNote: '직무명만으로 AI가 이 역할을 자동화할지 증강할지 예측하지 않습니다. 실제 task와 회사의 운영 방식을 확인해야 합니다.',
+      delegationLevel: '정보 부족',
+      delegationNote: 'AI 도구의 존재보다 실제로 어느 수준까지 업무를 위임하는지 확인해야 합니다.',
       items: [
         { area: '업무 재설계', status: '정보 부족', signal: 'AI 도구 도입과 업무 재설계는 같은 것이 아닙니다.', missingEvidence: 'AI로 바뀐 실제 업무단계와 human-agent handoff', questionToAsk: '최근 6개월 동안 AI 때문에 이 팀의 실제 업무 흐름에서 무엇이 없어지고 무엇이 새로 생겼나요?', askWho: '직속리더' },
         { area: '조직 준비도', status: '정보 부족', signal: '개인 역량보다 조직이 AI를 안전하게 활용할 구조가 있는지도 중요합니다.', missingEvidence: '승인 도구, 데이터 접근, 팀 표준, 관리자 지원', questionToAsk: 'AI를 실제 업무에 사용할 때 승인된 도구·데이터 규칙·팀 표준은 무엇인가요?', askWho: '직속리더' },
@@ -429,6 +435,8 @@ function fallbackEnglish(question: string): Analysis {
     axAudit: {
       exposureMode: '정보 부족',
       exposureNote: 'A job title is not enough to predict whether AI will automate or augment this role. Verify the actual tasks and operating model.',
+      delegationLevel: '정보 부족',
+      delegationNote: 'Do not infer AX maturity from tool access. Verify how far work is actually delegated: information processing, bounded task execution, or goal-based planning and execution.',
       items: [
         { area: '업무 재설계', status: '정보 부족', signal: 'Tool access is not the same as work redesign.', missingEvidence: 'actual workflow steps changed by AI and human-agent handoffs', questionToAsk: 'In the last six months, which steps in this team’s workflow disappeared, changed, or were newly created because of AI or agents?', askWho: '직속리더' },
         { area: '조직 준비도', status: '정보 부족', signal: 'Individual AI skill only creates value when the organization can support safe, repeatable use.', missingEvidence: 'sanctioned tools, data access, team standards, manager support', questionToAsk: 'Which AI tools or agent workflows are actually approved and used repeatedly by the team, and what data/governance rules apply?', askWho: '직속리더' },
@@ -655,14 +663,15 @@ ${ontologyPrompt}
 28) 사용자의 국가/지역에 따라 주식보상·세금·노동·증권 규정이 달라질 수 있습니다. 특정 국가의 법률·세금 규칙을 사용자가 제공하지 않았는데 단정하지 말고, 공식 문서·전문가 확인이 필요한 항목으로 돌립니다.
 29) 미국 ISO/NSO, 영국 EMI, 한국 주식매수선택권, 인도 ESOP 등 관할권별 제도 이름은 사용자가 제공하거나 공개 문서에서 확인된 경우에만 구체적으로 사용합니다.
 30) 글로벌 원격근무라면 회사 소재지와 근로자의 세법·고용 관할권이 다를 수 있음을 명시하고 어느 관할권이 적용되는지 직접 확인하게 합니다.
-31) axAudit는 'AI를 쓰는가'가 아니라 실제 AI Transformation을 실사합니다. 업무 재설계, 조직 준비도, 인간 판단·권한, 역량 궤적, 품질·책임 다섯 영역을 반드시 구분합니다.
+31) axAudit는 'AI를 쓰는가'가 아니라 실제 AI Transformation을 실사합니다. delegationLevel은 실제 업무 위임 깊이를 표현합니다: NON_AX(실질 위임 확인 안 됨), LEVEL 1(정보 처리), LEVEL 2(특정 업무 수행), LEVEL 3(목표 기반 계획·수행). 마케팅 문구만으로 단계를 올리지 말고 근거가 없으면 '정보 부족'으로 둡니다. 업무 재설계, 조직 준비도, 인간 판단·권한, 역량 궤적, 품질·책임 다섯 영역을 반드시 구분합니다.
 32) AI exposure 또는 자동화 가능성을 해고 확률이나 직업 소멸 확률로 바꾸지 않습니다. task exposure와 실제 employment outcome은 다릅니다. 근거가 없으면 exposureMode='정보 부족'으로 둡니다.
 33) 회사가 'AI-first', 'agentic', 'AI-native'라고 표현해도 실제 workflow 변화·human-agent handoff·승인된 도구·데이터 규칙·품질 평가·책임자가 구체적으로 확인되지 않으면 홍보 문구를 AX 증거로 인정하지 않습니다.
-34) AX에서 가장 중요한 질문은 '어떤 도구를 쓰나요?'보다 '최근 6개월 실제 업무가 무엇이 바뀌었고, 무엇을 AI가 실행하며, 사람은 무엇을 판단·승인·책임지는가?'입니다.
-35) 개인의 AI 숙련도와 조직의 AI 준비도를 분리합니다. readinessFit은 사용자가 제공한 personalAI와 회사의 실제/제공된 AX 증거가 있을 때만 구체화하고, 없으면 '정보 부족'으로 둡니다. 개인이 앞서고 조직이 못 받쳐주면 '개인 우위·조직 지연 가능', 조직이 앞서고 개인 적응이 필요하면 '조직 우위·개인 적응 필요'로 표현할 수 있으나 이를 좋음/나쁨 점수로 바꾸지 않습니다.
-36) AI가 반복업무를 줄이는 경우 장기 career capital이 문제정의·판단·도메인 전문성·리더십·검증 능력 쪽으로 이동하는지 확인합니다. 반대로 단순 위임 때문에 학습이 약해질 가능성도 질문으로 남깁니다.
-37) broad research에서 보고된 생산성·임금·고용 수치를 특정 회사나 개인에게 그대로 적용하지 않습니다.
-38) language가 en이면 자유 서술 텍스트는 자연스럽고 간결한 영어로 작성합니다. 단, schema enum 값(예: '회사 생존 신호', '확인됨', '지금 10분')은 구조 검증을 위해 반드시 원래 한국어 enum 토큰을 그대로 사용합니다.
+34) delegationLevel이 높다고 좋은 직장 또는 좋은 커리어라는 뜻이 아닙니다. 위임 수준이 높아질수록 human oversight, 품질 평가, 책임소재, escalation, 학습·skill retention을 더 엄격히 확인합니다.
+35) AX에서 가장 중요한 질문은 '어떤 도구를 쓰나요?'보다 '최근 6개월 실제 업무가 무엇이 바뀌었고, 무엇을 AI가 실행하며, 사람은 무엇을 판단·승인·책임지는가?'입니다.
+36) 개인의 AI 숙련도와 조직의 AI 준비도를 분리합니다. readinessFit은 사용자가 제공한 personalAI와 회사의 실제/제공된 AX 증거가 있을 때만 구체화하고, 없으면 '정보 부족'으로 둡니다. 개인이 앞서고 조직이 못 받쳐주면 '개인 우위·조직 지연 가능', 조직이 앞서고 개인 적응이 필요하면 '조직 우위·개인 적응 필요'로 표현할 수 있으나 이를 좋음/나쁨 점수로 바꾸지 않습니다.
+37) AI가 반복업무를 줄이는 경우 장기 career capital이 문제정의·판단·도메인 전문성·리더십·검증 능력 쪽으로 이동하는지 확인합니다. 반대로 단순 위임 때문에 학습이 약해질 가능성도 질문으로 남깁니다.
+38) broad research에서 보고된 생산성·임금·고용 수치를 특정 회사나 개인에게 그대로 적용하지 않습니다.
+39) language가 en이면 자유 서술 텍스트는 자연스럽고 간결한 영어로 작성합니다. 단, schema enum 값(예: '회사 생존 신호', '확인됨', '지금 10분')은 구조 검증을 위해 반드시 원래 한국어 enum 토큰을 그대로 사용합니다.
 ${language === 'en' ? 'Write all non-enum narrative fields in concise professional English.' : '문장은 짧고 구체적인 한국어로 작성하세요.'}`,
       prompt: `다음 스타트업 커리어/업무 결정을 Employee-side Due Diligence 방식으로 분석하세요.
 
