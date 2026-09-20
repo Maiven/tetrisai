@@ -87,11 +87,14 @@ type PublicEvidenceResult = {
   note: string;
 };
 
+type ResponseSignal = '아직 안 물음' | '구체적 답변' | '모호한 답변' | '답변 회피';
+
 type SavedPassport = {
   id: string;
   question: string;
   context: StartupContext;
   evidenceNotes: Record<string, string>;
+  responseSignals: Record<string, ResponseSignal>;
   savedAt: string;
   revisitAt: string;
 };
@@ -148,6 +151,7 @@ export default function Home() {
   const [error, setError] = useState('');
   const [copied, setCopied] = useState(false);
   const [evidenceNotes, setEvidenceNotes] = useState<Record<string, string>>({});
+  const [responseSignals, setResponseSignals] = useState<Record<string, ResponseSignal>>({});
   const [evidenceLoopMessage, setEvidenceLoopMessage] = useState('');
   const [reflection, setReflection] = useState('');
   const [publicCompany, setPublicCompany] = useState('');
@@ -162,8 +166,12 @@ export default function Home() {
   const resultsRef = useRef<HTMLElement | null>(null);
   const count = useMemo(() => question.length, [question]);
   const evidenceCount = useMemo(
-    () => Object.values(evidenceNotes).filter((x) => x.trim().length > 0).length,
-    [evidenceNotes],
+    () => Object.values(responseSignals).filter((x) => x === '구체적 답변').length,
+    [responseSignals],
+  );
+  const frictionCount = useMemo(
+    () => Object.values(responseSignals).filter((x) => x === '모호한 답변' || x === '답변 회피').length,
+    [responseSignals],
   );
 
   useEffect(() => {
@@ -187,6 +195,7 @@ export default function Home() {
     sample = false,
     verifiedEvidence: string[] = [],
     publicEvidence: string[] = [],
+    transparencySignals: string[] = [],
   ) {
     const q = (value ?? question).trim();
     setError('');
@@ -201,6 +210,7 @@ export default function Home() {
     if (verifiedEvidence.length === 0 && publicEvidence.length === 0) {
       setReflection('');
       setEvidenceNotes({});
+      setResponseSignals({});
       setEvidenceLoopMessage('');
     }
     setLoading(true);
@@ -219,6 +229,7 @@ export default function Home() {
           context: normalizedContext,
           verifiedEvidence,
           publicEvidence,
+          transparencySignals,
           sourceExcerpt,
         }),
       });
@@ -248,18 +259,39 @@ export default function Home() {
     setEvidenceLoopMessage('');
   }
 
-  async function reanalyzeWithEvidence() {
-    const verifiedEvidence = Object.entries(evidenceNotes)
-      .filter(([, value]) => value.trim())
-      .map(([dimension, value]) => `${dimension}: ${value.trim()}`);
+  function updateResponseSignal(dimension: string, signal: ResponseSignal) {
+    setResponseSignals((prev) => ({ ...prev, [dimension]: signal }));
+    setEvidenceLoopMessage('');
+  }
 
-    if (verifiedEvidence.length === 0) {
-      setEvidenceLoopMessage('먼저 5-Lens 중 하나 이상에 새로 확인한 내용을 적어주세요.');
+  async function reanalyzeWithEvidence() {
+    const verifiedEvidence = Object.entries(responseSignals)
+      .filter(([, signal]) => signal === '구체적 답변')
+      .map(([dimension]) => {
+        const note = evidenceNotes[dimension]?.trim();
+        return `${dimension}: 구체적 답변을 받음${note ? ` · ${note}` : ''}`;
+      });
+
+    const transparencySignals = Object.entries(responseSignals)
+      .filter(([, signal]) => signal === '모호한 답변' || signal === '답변 회피')
+      .map(([dimension, signal]) => {
+        const note = evidenceNotes[dimension]?.trim();
+        return `${dimension}: ${signal}${note ? ` · ${note}` : ''}`;
+      });
+
+    for (const [dimension, note] of Object.entries(evidenceNotes)) {
+      if (!note.trim()) continue;
+      if (responseSignals[dimension]) continue;
+      transparencySignals.push(`${dimension}: 사용자 메모(검증 수준 미지정) · ${note.trim()}`);
+    }
+
+    if (verifiedEvidence.length === 0 && transparencySignals.length === 0) {
+      setEvidenceLoopMessage('질문한 뒤 받은 답의 상태를 표시하거나, 익명화한 답변 요지를 적어주세요.');
       return;
     }
 
-    setEvidenceLoopMessage(`새 증거 ${verifiedEvidence.length}개를 반영해 다시 실사합니다.`);
-    await analyze(question, false, verifiedEvidence, publicEvidencePayload());
+    setEvidenceLoopMessage(`구체적 답변 ${verifiedEvidence.length}개와 투명성 신호 ${transparencySignals.length}개를 반영해 다시 실사합니다.`);
+    await analyze(question, false, verifiedEvidence, publicEvidencePayload(), transparencySignals);
   }
 
   async function copyQuestion(text: string) {
@@ -328,6 +360,7 @@ export default function Home() {
       question,
       context,
       evidenceNotes,
+      responseSignals,
       savedAt: new Date().toISOString(),
       revisitAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
     };
@@ -345,6 +378,7 @@ export default function Home() {
     setQuestion(passport.question);
     setContext(passport.context);
     setEvidenceNotes(passport.evidenceNotes || {});
+    setResponseSignals(passport.responseSignals || {});
     setPassportMessage('저장한 결정을 불러왔습니다. 새 증거를 추가하거나 다시 실사하세요.');
     document.getElementById('decision-input')?.focus();
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -702,7 +736,9 @@ export default function Home() {
             <StartupDiligence
               items={result.analysis.startupDiligence}
               notes={evidenceNotes}
+              responseSignals={responseSignals}
               onNoteChange={updateEvidenceNote}
+              onSignalChange={updateResponseSignal}
               onCopyQuestion={copyQuestion}
             />
 
@@ -740,8 +776,8 @@ export default function Home() {
                 <p>비공개 숫자·회사명·계약 원문은 적지 말고 “구체적 답변을 받음 / 답변이 모호함 / 권한이 기대보다 좁음”처럼 익명화한 요지만 입력하세요.</p>
               </div>
               <div className="evidenceProgress">
-                <div><strong>{evidenceCount}</strong><span>/ 5 Lenses</span></div>
-                <small>새로 확보한 증거</small>
+                <div><strong>{evidenceCount}</strong><span>/ 5 verified</span></div>
+                <small>구체적 답변 · 마찰 신호 {frictionCount}</small>
               </div>
               <button disabled={loading || evidenceCount === 0} onClick={reanalyzeWithEvidence}>
                 {loading ? '재실사 중…' : '새 증거로 다시 실사 →'}
@@ -1273,12 +1309,16 @@ function EvidenceLedger({ items }: { items: EvidenceItem[] }) {
 function StartupDiligence({
   items,
   notes,
+  responseSignals,
   onNoteChange,
+  onSignalChange,
   onCopyQuestion,
 }: {
   items: DiligenceItem[];
   notes: Record<string, string>;
+  responseSignals: Record<string, ResponseSignal>;
   onNoteChange: (dimension: string, value: string) => void;
+  onSignalChange: (dimension: string, value: ResponseSignal) => void;
   onCopyQuestion: (text: string) => void;
 }) {
   return (
@@ -1298,8 +1338,22 @@ function StartupDiligence({
               <strong>{x.questionToAsk}</strong>
               <button onClick={() => onCopyQuestion(x.questionToAsk)}>질문 복사</button>
             </div>
+            <div className="responseSignal">
+              <small>물어본 뒤 답변 상태</small>
+              <div>
+                {(['아직 안 물음', '구체적 답변', '모호한 답변', '답변 회피'] as ResponseSignal[]).map((signal) => (
+                  <button
+                    key={signal}
+                    className={(responseSignals[x.dimension] ?? '아직 안 물음') === signal ? 'active' : ''}
+                    onClick={() => onSignalChange(x.dimension, signal)}
+                  >
+                    {signal}
+                  </button>
+                ))}
+              </div>
+            </div>
             <label className="evidenceNote">
-              <small>확인 후, 익명화한 답의 요지만 기록</small>
+              <small>답변의 요지를 익명으로 기록</small>
               <textarea
                 maxLength={300}
                 value={notes[x.dimension] ?? ''}
