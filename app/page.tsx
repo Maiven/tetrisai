@@ -880,8 +880,8 @@ export default function Home() {
               </div>
               <div className="headerActions">
                 <div className="depthToggle" role="group" aria-label="결과 상세 수준">
-                  <button className={resultDepth === 'essential' ? 'active' : ''} onClick={() => setResultDepth('essential')}>핵심만</button>
-                  <button className={resultDepth === 'full' ? 'active' : ''} onClick={() => setResultDepth('full')}>전체 실사</button>
+                  <button className={resultDepth === 'essential' ? 'active' : ''} onClick={() => setResultDepth('essential')}>추천 흐름</button>
+                  <button className={resultDepth === 'full' ? 'active' : ''} onClick={() => setResultDepth('full')}>전체 보기</button>
                 </div>
                 <button onClick={copySummary}>{copied ? '복사 완료 ✓' : '실사 카드 복사'}</button>
                 <button onClick={() => { setResult(null); setPreviousResult(null); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>새 결정</button>
@@ -893,6 +893,11 @@ export default function Home() {
               <h3>{question}</h3>
               <div className="reframe"><span>다시 정의한 진짜 질문</span><p>{result.analysis.realQuestion}</p></div>
             </article>
+
+            <div className="focusRail" aria-label="추천 실사 흐름">
+              <span>지금은 3가지만</span>
+              <b>1 · 질문 3개 보내기</b><i>→</i><b>2 · 답변 상태 기록</b><i>→</i><b>3 · 새 증거로 재실사</b>
+            </div>
 
             <DecisionGap
               items={result.analysis.startupDiligence}
@@ -923,7 +928,11 @@ export default function Home() {
             </div>
 
             <StartupDiligence
-              items={result.analysis.startupDiligence}
+              items={resultDepth === 'essential'
+                ? [...result.analysis.startupDiligence]
+                    .sort((a, b) => ({ '검증 우선': 0, '정보 부족': 1, '주의': 2, '확인됨': 3 }[a.status] - { '검증 우선': 0, '정보 부족': 1, '주의': 2, '확인됨': 3 }[b.status]))
+                    .slice(0, 3)
+                : result.analysis.startupDiligence}
               notes={evidenceNotes}
               responseSignals={responseSignals}
               onNoteChange={updateEvidenceNote}
@@ -1811,7 +1820,7 @@ function StartupDiligence({
   return (
     <article className="startupDiligence">
       <div className="diligenceHead">
-        <div><p className="panelLabel">STARTUP 5-LENS DUE DILIGENCE</p><h3>회사보다 먼저, 내 커리어가 투자할 곳을 실사합니다.</h3></div>
+        <div><p className="panelLabel">STARTUP 5-LENS DUE DILIGENCE</p><h3>회사보다 먼저, 내 커리어가 투자할 곳을 확인하고 답변 상태를 기록합니다.</h3></div>
         <span>Employee-side</span>
       </div>
       <div className="diligenceGrid">
