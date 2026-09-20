@@ -327,6 +327,19 @@ export default function GlobalPage() {
     await navigator.clipboard.writeText(text);
   }
 
+  async function copyQuestionPack(items: DiligenceItem[]) {
+    const rank: Record<DiligenceItem['status'], number> = { '검증 우선': 0, '정보 부족': 1, '주의': 2, '확인됨': 3 };
+    const top = [...items].sort((a, b) => rank[a.status] - rank[b.status]).slice(0, 3);
+    const pack = [
+      'Bandaepyeon · 3 questions to ask before I decide',
+      '',
+      ...top.map((x, i) => `${i + 1}. [${DIMENSION[x.dimension]}] ${x.questionToAsk}`),
+      '',
+      'Get the answers first. Then update the decision.',
+    ].join('\n');
+    await navigator.clipboard.writeText(pack);
+  }
+
   return (
     <main className="globalProduct" lang="en">
       <section className="globalHero">
@@ -345,20 +358,26 @@ export default function GlobalPage() {
 
         <div className="globalHeroGrid">
           <div className="globalHeroCopy">
-            <p className="eyebrow">STARTUP CAREER DUE DILIGENCE · GLOBAL</p>
-            <h1>Due diligence for<br /><em>career decisions that cost years.</em></h1>
+            <p className="eyebrow">STARTUP OFFER & CAREER DUE DILIGENCE · GLOBAL</p>
+            <h1>Got a startup offer?<br /><em>Before you say yes, find what is still unproven.</em></h1>
             <p className="globalLead">
-              Investors diligence startups before wiring money. You invest something harder to recover:
-              <b> your time, career capital, and options.</b> Bandaepyeon turns an offer, stay/leave decision,
-              role change, or equity question into evidence you can actually verify.
+              Salary and equity are the visible part of the offer. The expensive mistakes usually hide in
+              <b> runway, real decision rights, manager behavior, equity terms, and what you will actually learn.</b>
+              Bandaepyeon turns those unknowns into questions you can use today.
             </p>
+
+            <div className="heroOutcomeStrip globalOutcomeStrip">
+              <div><span>01</span><b>3 questions to ask today</b><small>Recruiter, manager, or current employee</small></div>
+              <div><span>02</span><b>Your flip conditions</b><small>What evidence should change your mind</small></div>
+              <div><span>03</span><b>A 7-day evidence sprint</b><small>Move from AI output to real-world verification</small></div>
+            </div>
 
             <div className="globalProofRow">
               <span>No login</span><span>No recommendation score</span><span>Public evidence + real questions</span>
             </div>
 
             <form className="globalDecisionBox" onSubmit={submit}>
-              <label htmlFor="global-decision">What decision are you facing?</label>
+              <label htmlFor="global-decision">Have an offer? Describe it in one sentence. Other startup career decisions work too.</label>
               <textarea
                 id="global-decision"
                 value={question}
@@ -389,7 +408,7 @@ export default function GlobalPage() {
 
               <div className="globalDecisionActions">
                 <small>Do not enter confidential company information or personal identifiers.</small>
-                <button type="submit" disabled={loading}>{loading ? 'Running diligence…' : 'Run due diligence →'}</button>
+                <button type="submit" disabled={loading}>{loading ? 'Running diligence…' : 'Diligence before I say yes →'}</button>
               </div>
               {error && <p className="globalError">{error}</p>}
             </form>
@@ -450,6 +469,8 @@ export default function GlobalPage() {
               </div>
               <button onClick={() => { setResult(null); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>New decision</button>
             </header>
+
+            <GlobalDecisionGap items={result.analysis.startupDiligence} onCopyPack={copyQuestionPack} />
 
             <div className="globalNextRow">
               <article><span>NEXT CHECK</span><b>{result.analysis.decisionCard.nextCheck}</b></article>
@@ -592,6 +613,37 @@ export default function GlobalPage() {
         </div>
       )}
     </main>
+  );
+}
+
+function GlobalDecisionGap({
+  items,
+  onCopyPack,
+}: {
+  items: DiligenceItem[];
+  onCopyPack: (items: DiligenceItem[]) => void;
+}) {
+  const rank: Record<DiligenceItem['status'], number> = { '검증 우선': 0, '정보 부족': 1, '주의': 2, '확인됨': 3 };
+  const top = [...items].sort((a, b) => rank[a.status] - rank[b.status]).slice(0, 3);
+  const unresolved = items.filter((x) => x.status !== '확인됨').length;
+
+  return (
+    <article className="decisionGap globalDecisionGap">
+      <div className="decisionGapLead">
+        <p className="panelLabel">DECISION GAP · BEFORE YOU SAY YES</p>
+        <h3>{unresolved > 0 ? `You are still carrying ${unresolved} unverified areas into this decision.` : 'All five core lenses have direct evidence.'}</h3>
+        <p>Start with these three questions. A <b>specific answer</b> is more useful than a reassuring one.</p>
+      </div>
+      <div className="decisionGapQuestions">
+        {top.map((x, i) => (
+          <div key={x.dimension}>
+            <span>{String(i + 1).padStart(2, '0')} · {DIMENSION[x.dimension]}</span>
+            <p>{x.questionToAsk}</p>
+          </div>
+        ))}
+      </div>
+      <button onClick={() => onCopyPack(items)}>Copy the 3 questions I should ask today →</button>
+    </article>
   );
 }
 
