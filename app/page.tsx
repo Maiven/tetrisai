@@ -194,7 +194,7 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    const token = new URLSearchParams(window.location.search).get('response');
+    const token = new URLSearchParams(window.location.hash.replace(/^#/, '')).get('response');
     if (!token) return;
     const decoded = decodeDiligencePayload(token);
     if (!decoded || decoded.type !== 'response' || decoded.returnPath !== '/') return;
@@ -223,8 +223,7 @@ export default function Home() {
     setEvidenceLoopMessage(`외부 응답 ${decoded.answers.length}개를 가져왔습니다. 링크는 응답자 신원을 인증하지 않으므로 내용을 확인한 뒤 각 Lens의 답변 상태를 직접 분류해주세요.`);
 
     const cleanUrl = new URL(window.location.href);
-    cleanUrl.searchParams.delete('response');
-    window.history.replaceState({}, '', `${cleanUrl.pathname}${cleanUrl.search}${cleanUrl.hash}`);
+    window.history.replaceState({}, '', `${cleanUrl.pathname}${cleanUrl.search}`);
   }, []);
 
   function publicEvidencePayload(source = publicResearch): string[] {
@@ -392,7 +391,7 @@ export default function Home() {
       questions: priority.map((x) => ({ dimension: x.dimension, question: x.questionToAsk, askWho: x.askWho })),
     };
     savePassport();
-    const link = `${window.location.origin}/request?payload=${encodeDiligencePayload(payload)}`;
+    const link = `${window.location.origin}/request#payload=${encodeDiligencePayload(payload)}`;
     await navigator.clipboard.writeText(link);
     setEvidenceLoopMessage('회사에 보낼 실사 링크를 복사했습니다. 링크에는 질문 3개만 포함되고, 개인 고민·AI 분석은 포함되지 않습니다.');
   }
