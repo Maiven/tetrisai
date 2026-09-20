@@ -11,6 +11,7 @@ const startupDiligenceItem = z.object({
   signal: z.string(),
   missingEvidence: z.string(),
   questionToAsk: z.string(),
+  askWho: z.enum(['채용담당자', '직속리더', '현직자', '공식문서/전문가']),
 });
 
 const analysisSchema = z.object({
@@ -119,35 +120,35 @@ const SAMPLE_ANALYSIS: Analysis = {
       status: '검증 우선',
       signal: 'Series A라는 사실 외에 런웨이·매출의 질·다음 조달 필요 시점은 확인되지 않았습니다.',
       missingEvidence: '최근 자금조달 시점, 월별 현금소진 방향, 다음 라운드 전 필요한 핵심 마일스톤',
-      questionToAsk: '현재 현금 기준으로 계획된 인력과 비용을 유지하면 몇 개월 운영할 수 있고, 다음 투자 전에 반드시 달성해야 하는 지표는 무엇인가요?',
+      questionToAsk: '현재 현금 기준으로 계획된 인력과 비용을 유지하면 몇 개월 운영할 수 있고, 다음 투자 전에 반드시 달성해야 하는 지표는 무엇인가요?', askWho: '채용담당자',
     },
     {
       dimension: '역할의 실제',
       status: '정보 부족',
       signal: '더 큰 책임을 맡는다는 설명은 있지만 성공 기준과 버려도 되는 업무 범위가 보이지 않습니다.',
       missingEvidence: '첫 90일 목표, 담당 KPI, 하지 않을 일, 의사결정 가능한 범위',
-      questionToAsk: '입사 90일 뒤 이 역할이 성공했다고 판단할 구체적 결과 3개와, 제가 최종 결정할 수 있는 영역은 무엇인가요?',
+      questionToAsk: '입사 90일 뒤 이 역할이 성공했다고 판단할 구체적 결과 3개와, 제가 최종 결정할 수 있는 영역은 무엇인가요?', askWho: '직속리더',
     },
     {
       dimension: '리더·의사결정권',
       status: '정보 부족',
       signal: '직속 리더의 피드백 방식과 우선순위 충돌 시 최종 결정 구조가 확인되지 않았습니다.',
       missingEvidence: '1:1 주기, 최근 의견 충돌 사례, 리더가 위임하는 결정과 직접 잡는 결정',
-      questionToAsk: '최근 팀원이 리더 의견과 다른 판단을 했던 사례와 그때 최종 결정이 어떻게 내려졌는지 들려주실 수 있나요?',
+      questionToAsk: '최근 팀원이 리더 의견과 다른 판단을 했던 사례와 그때 최종 결정이 어떻게 내려졌는지 들려주실 수 있나요?', askWho: '현직자',
     },
     {
       dimension: '현금·지분 보상',
       status: '검증 우선',
       signal: '연봉 상승은 확인됐지만 스톡옵션의 경제적 조건을 현금과 같은 방식으로 평가할 수 없습니다.',
       missingEvidence: '옵션 수량, 완전희석 주식수 또는 지분율, 행사가격, 베스팅, 퇴사 후 행사기간',
-      questionToAsk: '제 옵션이 완전희석 기준 몇 %이며 행사가격·베스팅·퇴사 후 행사 가능 기간은 각각 어떻게 되나요?',
+      questionToAsk: '제 옵션이 완전희석 기준 몇 %이며 행사가격·베스팅·퇴사 후 행사 가능 기간은 각각 어떻게 되나요?', askWho: '공식문서/전문가',
     },
     {
       dimension: '학습·다음 선택지',
       status: '주의',
       signal: '빠른 성장이 곧 좋은 학습을 뜻하지는 않습니다. 누구에게 무엇을 배우고 어떤 증거를 포트폴리오에 남길지가 필요합니다.',
       missingEvidence: '멘토 또는 강한 동료, 12개월 뒤 시장에서 설명 가능한 성과, 실패해도 남는 역량',
-      questionToAsk: '이 역할에서 1년 뒤 제가 시장에서 새롭게 증명할 수 있어야 하는 능력과 결과는 무엇인가요?',
+      questionToAsk: '이 역할에서 1년 뒤 제가 시장에서 새롭게 증명할 수 있어야 하는 능력과 결과는 무엇인가요?', askWho: '직속리더',
     },
   ],
   realityCheck: {
@@ -229,11 +230,11 @@ function fallback(question: string): Analysis {
       { claim: '스톡옵션 또는 성과보상의 실제 조건', status: '미확인', why: '명목 금액이나 옵션 수만으로 경제적 가치를 알 수 없습니다.' },
     ],
     startupDiligence: [
-      { dimension: '회사 생존 신호', status: '정보 부족', signal: '회사 단계와 브랜드만으로 현금 여력과 사업 지속성을 알 수 없습니다.', missingEvidence: '런웨이, 다음 자금조달 필요 시점, 핵심 사업 마일스톤', questionToAsk: '현재 계획 기준으로 현금은 몇 개월 운영 가능하고 다음 투자 전에 반드시 달성해야 할 지표는 무엇인가요?' },
-      { dimension: '역할의 실제', status: '정보 부족', signal: '직무명만으로 실제 권한과 성공 기준을 알 수 없습니다.', missingEvidence: '첫 90일 목표, KPI, 의사결정 범위, 하지 않을 일', questionToAsk: '첫 90일에 이 역할이 성공했다고 판단할 결과와 제가 최종 결정할 수 있는 영역은 무엇인가요?' },
-      { dimension: '리더·의사결정권', status: '정보 부족', signal: '좋은 인터뷰 경험이 실제 피드백 문화와 같다고 볼 수 없습니다.', missingEvidence: '1:1 주기, 반대 의견 처리 사례, 우선순위 결정 구조', questionToAsk: '최근 팀원이 리더와 다른 판단을 냈던 사례에서 최종 결정은 어떻게 이루어졌나요?' },
-      { dimension: '현금·지분 보상', status: '정보 부족', signal: '연봉 외 지분·성과보상은 계약 조건을 확인해야 비교할 수 있습니다.', missingEvidence: '지분율, 행사가격, 베스팅, 행사기간, 성과조건', questionToAsk: '지분 또는 옵션의 완전희석 기준 비율과 행사가격·베스팅·퇴사 후 행사조건을 확인할 수 있나요?' },
-      { dimension: '학습·다음 선택지', status: '검증 우선', signal: '좋은 커리어 선택은 실패해도 시장에 남는 증거가 있어야 합니다.', missingEvidence: '12개월 뒤 증명할 역량, 강한 동료/멘토, 포트폴리오 결과', questionToAsk: '이 역할에서 1년 뒤 제가 새롭게 증명할 수 있어야 하는 능력과 결과는 무엇인가요?' },
+      { dimension: '회사 생존 신호', status: '정보 부족', signal: '회사 단계와 브랜드만으로 현금 여력과 사업 지속성을 알 수 없습니다.', missingEvidence: '런웨이, 다음 자금조달 필요 시점, 핵심 사업 마일스톤', questionToAsk: '현재 계획 기준으로 현금은 몇 개월 운영 가능하고 다음 투자 전에 반드시 달성해야 할 지표는 무엇인가요?', askWho: '채용담당자' },
+      { dimension: '역할의 실제', status: '정보 부족', signal: '직무명만으로 실제 권한과 성공 기준을 알 수 없습니다.', missingEvidence: '첫 90일 목표, KPI, 의사결정 범위, 하지 않을 일', questionToAsk: '첫 90일에 이 역할이 성공했다고 판단할 결과와 제가 최종 결정할 수 있는 영역은 무엇인가요?', askWho: '직속리더' },
+      { dimension: '리더·의사결정권', status: '정보 부족', signal: '좋은 인터뷰 경험이 실제 피드백 문화와 같다고 볼 수 없습니다.', missingEvidence: '1:1 주기, 반대 의견 처리 사례, 우선순위 결정 구조', questionToAsk: '최근 팀원이 리더와 다른 판단을 냈던 사례에서 최종 결정은 어떻게 이루어졌나요?', askWho: '현직자' },
+      { dimension: '현금·지분 보상', status: '정보 부족', signal: '연봉 외 지분·성과보상은 계약 조건을 확인해야 비교할 수 있습니다.', missingEvidence: '지분율, 행사가격, 베스팅, 행사기간, 성과조건', questionToAsk: '지분 또는 옵션의 완전희석 기준 비율과 행사가격·베스팅·퇴사 후 행사조건을 확인할 수 있나요?', askWho: '공식문서/전문가' },
+      { dimension: '학습·다음 선택지', status: '검증 우선', signal: '좋은 커리어 선택은 실패해도 시장에 남는 증거가 있어야 합니다.', missingEvidence: '12개월 뒤 증명할 역량, 강한 동료/멘토, 포트폴리오 결과', questionToAsk: '이 역할에서 1년 뒤 제가 새롭게 증명할 수 있어야 하는 능력과 결과는 무엇인가요?', askWho: '직속리더' },
     ],
     realityCheck: {
       negativePreview: '이 역할에서 실제 구성원이 가장 힘들어하는 점과 최근 퇴사한 사람이 떠난 이유를 구체적 사례로 물어보세요.',
@@ -315,11 +316,11 @@ function fallbackEnglish(question: string): Analysis {
       { claim: 'The real economic meaning of the equity', status: '미확인', why: 'Option count alone is not enough to understand ownership, exercise terms, dilution, or liquidity.' },
     ],
     startupDiligence: [
-      { dimension: '회사 생존 신호', status: '정보 부족', signal: 'Funding stage alone does not establish operating resilience.', missingEvidence: 'runway, next financing milestone, operating priorities', questionToAsk: 'What milestones must the company hit before the next financing decision, and what would change the current hiring or spending plan?' },
-      { dimension: '역할의 실제', status: '정보 부족', signal: 'The title does not yet prove the actual scope or authority.', missingEvidence: '90-day outcomes, KPIs, decision rights, non-goals', questionToAsk: 'What three outcomes would make this role successful after 90 days, and which decisions would I own without escalation?' },
-      { dimension: '리더·의사결정권', status: '정보 부족', signal: 'The manager relationship still needs behavioral evidence.', missingEvidence: 'feedback cadence, disagreement example, priority ownership', questionToAsk: 'Tell me about a recent case where someone on the team disagreed with the manager. How was the final decision made?' },
-      { dimension: '현금·지분 보상', status: '검증 우선', signal: 'Cash may be clear while equity remains economically ambiguous.', missingEvidence: 'ownership basis, strike/exercise price, vesting, post-termination exercise, liquidity constraints', questionToAsk: 'What percentage of fully diluted ownership does this grant represent, and what are the vesting and exercise conditions?' },
-      { dimension: '학습·다음 선택지', status: '검증 우선', signal: 'Fast company growth does not guarantee durable career capital.', missingEvidence: 'skills, portfolio evidence, mentor/peer quality, future options', questionToAsk: 'What should I be able to prove in the market 12 months from now that I cannot prove today?' },
+      { dimension: '회사 생존 신호', status: '정보 부족', signal: 'Funding stage alone does not establish operating resilience.', missingEvidence: 'runway, next financing milestone, operating priorities', questionToAsk: 'What milestones must the company hit before the next financing decision, and what would change the current hiring or spending plan?', askWho: '채용담당자' },
+      { dimension: '역할의 실제', status: '정보 부족', signal: 'The title does not yet prove the actual scope or authority.', missingEvidence: '90-day outcomes, KPIs, decision rights, non-goals', questionToAsk: 'What three outcomes would make this role successful after 90 days, and which decisions would I own without escalation?', askWho: '직속리더' },
+      { dimension: '리더·의사결정권', status: '정보 부족', signal: 'The manager relationship still needs behavioral evidence.', missingEvidence: 'feedback cadence, disagreement example, priority ownership', questionToAsk: 'Tell me about a recent case where someone on the team disagreed with the manager. How was the final decision made?', askWho: '현직자' },
+      { dimension: '현금·지분 보상', status: '검증 우선', signal: 'Cash may be clear while equity remains economically ambiguous.', missingEvidence: 'ownership basis, strike/exercise price, vesting, post-termination exercise, liquidity constraints', questionToAsk: 'What percentage of fully diluted ownership does this grant represent, and what are the vesting and exercise conditions?', askWho: '공식문서/전문가' },
+      { dimension: '학습·다음 선택지', status: '검증 우선', signal: 'Fast company growth does not guarantee durable career capital.', missingEvidence: 'skills, portfolio evidence, mentor/peer quality, future options', questionToAsk: 'What should I be able to prove in the market 12 months from now that I cannot prove today?', askWho: '직속리더' },
     ],
     realityCheck: {
       negativePreview: 'What has been hardest about this team in the last year, and why have strong people left?',
@@ -487,7 +488,7 @@ ${ontologyPrompt}
 7) 학습은 회사의 성장보다 12개월 뒤 개인이 새롭게 증명할 역량·성과와 실패해도 남는 옵션을 봅니다.
 8) 사용자의 initialLean이 있으면 그것은 결론이 아니라 '초기 가설'입니다. 그 방향에 맞춰주지 말고 반대 증거를 적극적으로 찾습니다.
 9) realityCheck는 세 가지를 반드시 포함합니다. (a) realistic negative preview: 실제 힘든 점/퇴사 이유를 묻는 행동기반 질문, (b) alternative quality: 대안의 개수가 아닌 질을 비교하는 질문, (c) promise gap: 채용/입사 때 약속과 현재 현실의 차이를 검증하는 질문.
-10) 질문은 예/아니오로 끝나는 추상 질문보다 최근 실제 사례·행동·문서·숫자를 요구하는 형태를 우선합니다.
+10) 질문은 예/아니오로 끝나는 추상 질문보다 최근 실제 사례·행동·문서·숫자를 요구하는 형태를 우선합니다. askWho는 그 질문에 가장 적합한 확인 대상을 채용담당자·직속리더·현직자·공식문서/전문가 중 하나로 지정합니다.
 11) 공개 채용공고 또는 익명화한 오퍼 요약이 주어지면 sourceAudit을 수행합니다. 문서에 적힌 문구는 '문서상 약속'이지 실제 운영 사실이 아닙니다. 구체 조건, 모호한 표현, 빠진 조건을 나누고 현실에서 검증할 질문을 생성합니다.
 12) sourceExcerpt에 회사 비밀정보가 포함돼 있다고 추정되더라도 그것을 외부 사실로 확장하거나 다른 맥락에 사용하지 않습니다.
 13) startupDiligence의 5개 차원은 항상 모두 작성하고, 정보가 없으면 솔직히 '정보 부족'으로 표시합니다.
