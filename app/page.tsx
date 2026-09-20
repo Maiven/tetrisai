@@ -14,7 +14,7 @@ type DiligenceItem = {
   questionToAsk: string;
   askWho: '채용담당자' | '직속리더' | '현직자' | '공식문서/전문가';
 };
-type StartupContext = { decisionType: string; stage: string; role: string; headcount: string; initialLean: string };
+type StartupContext = { decisionType: string; stage: string; role: string; headcount: string; initialLean: string; aiChange: string };
 type Analysis = {
   reframedDecision: string;
   realQuestion: string;
@@ -23,6 +23,20 @@ type Analysis = {
   blindSpots: string[];
   evidenceLedger: EvidenceItem[];
   startupDiligence: DiligenceItem[];
+  axAudit: {
+    exposureMode: '증강 중심' | '자동화 중심' | '혼합' | '정보 부족';
+    exposureNote: string;
+    items: {
+      area: '업무 재설계' | '조직 준비도' | '인간 판단·권한' | '역량 궤적' | '품질·책임';
+      status: '확인됨' | '주의' | '정보 부족' | '검증 우선';
+      signal: string;
+      missingEvidence: string;
+      questionToAsk: string;
+      askWho: '채용담당자' | '직속리더' | '현직자' | '공식문서/전문가';
+    }[];
+    twelveMonthScenario: { moreHuman: string; moreAI: string; watchFor: string };
+    axRule: string;
+  };
   realityCheck: { negativePreview: string; alternativeQuality: string; promiseGap: string };
   sourceAudit: {
     present: boolean;
@@ -131,6 +145,7 @@ const STAGES = ['선택 안 함', 'Pre-seed', 'Seed', 'Series A', 'Series B', 'S
 const ROLES = ['선택 안 함', 'Product/PM', 'Data/AI', 'Engineering', 'Design', 'Growth/Marketing', 'BD/Sales', 'Operations/People', 'Founder/Lead', 'Other'];
 const HEADCOUNTS = ['선택 안 함', '1~19명', '20~50명', '51~200명', '201명 이상', '모름'];
 const INITIAL_LEANS = ['선택 안 함', '실행/합류 쪽', '보류/잔류 쪽', '반대 선택지 쪽', '아직 모름'];
+const AI_CHANGES = ['선택 안 함', 'AI 도구만 일부 사용', '업무 일부 자동화', 'Agent workflow 운영', '역할·프로세스 재설계 중', 'AI 활용 수준 모름'];
 
 const SAMPLE = '현재 직장은 안정적이지만 성장 속도가 느립니다. 연봉이 15% 높은 Series A 스타트업으로 이직 제안을 받았고 스톡옵션도 있습니다.';
 const SAMPLE_CONTEXT: StartupContext = {
@@ -139,6 +154,7 @@ const SAMPLE_CONTEXT: StartupContext = {
   role: 'Data/AI',
   headcount: '51~200명',
   initialLean: '실행/합류 쪽',
+  aiChange: '역할·프로세스 재설계 중',
 };
 
 export default function Home() {
@@ -149,6 +165,7 @@ export default function Home() {
     role: '선택 안 함',
     headcount: '선택 안 함',
     initialLean: '선택 안 함',
+    aiChange: '선택 안 함',
   });
   const [result, setResult] = useState<ApiResult | null>(null);
   const [previousResult, setPreviousResult] = useState<ApiResult | null>(null);
@@ -615,7 +632,7 @@ export default function Home() {
               <details className="contextDisclosure">
                 <summary>
                   <span><b>선택사항</b> · 스타트업 상황 더 알려주기</span>
-                  <small>회사 단계·직무·현재 기울기를 추가하면 질문이 더 구체적입니다.</small>
+                  <small>회사 단계·직무·현재 기울기·AX 변화까지 알면 질문이 더 구체적입니다.</small>
                 </summary>
                 <div className="contextBox">
                   <div className="contextGrid">
@@ -624,6 +641,7 @@ export default function Home() {
                     <ContextSelect label="내 직무" value={context.role} options={ROLES} onChange={(v) => updateContext('role', v)} />
                     <ContextSelect label="회사 규모" value={context.headcount} options={HEADCOUNTS} onChange={(v) => updateContext('headcount', v)} />
                     <ContextSelect label="분석 전 내 기울기" value={context.initialLean} options={INITIAL_LEANS} onChange={(v) => updateContext('initialLean', v)} />
+                    <ContextSelect label="AX / AI 업무 변화" value={context.aiChange} options={AI_CHANGES} onChange={(v) => updateContext('aiChange', v)} />
                   </div>
                   <p className="contextHint">초기 기울기는 AI가 맞춰줘야 할 답이 아니라, 반증할 <b>가설</b>로만 사용합니다.</p>
                   <label className="sourceExcerptInput">
@@ -896,6 +914,8 @@ export default function Home() {
               onSignalChange={updateResponseSignal}
               onCopyQuestion={copyQuestion}
             />
+
+            <AXRoleAudit audit={result.analysis.axAudit} onCopyQuestion={copyQuestion} />
 
             <ExpectationMemo
               items={result.analysis.startupDiligence}
@@ -1305,6 +1325,59 @@ function EvidenceRouter() {
       </div>
       <p className="routerNotice">외부 서비스는 검증 출발점의 예시이며 반대편과의 제휴를 의미하지 않습니다. 유료·로그인·지역 제한이 있을 수 있습니다.</p>
     </details>
+  );
+}
+
+function AXRoleAudit({
+  audit,
+  onCopyQuestion,
+}: {
+  audit: Analysis['axAudit'];
+  onCopyQuestion: (text: string) => void;
+}) {
+  const statusClass = (status: string) => status.replaceAll(' ', '-');
+  return (
+    <article className="axAudit">
+      <div className="axAuditHead">
+        <div>
+          <p className="panelLabel">AX ROLE REALITY · AI TRANSFORMATION</p>
+          <h3>“AI를 쓰는 회사인가?”보다 내 일이 실제로 어떻게 바뀌는지 실사합니다.</h3>
+          <p>{audit.exposureNote}</p>
+        </div>
+        <span className={`axMode ax-${statusClass(audit.exposureMode)}`}>{audit.exposureMode}</span>
+      </div>
+
+      <div className="axAuditGrid">
+        {audit.items.map((item, index) => (
+          <section key={item.area}>
+            <div className="axCardTop">
+              <i>{String(index + 1).padStart(2, '0')}</i>
+              <b>{item.area}</b>
+              <span>{item.status}</span>
+            </div>
+            <p>{item.signal}</p>
+            <div className="axMissing"><small>확인할 증거</small><strong>{item.missingEvidence}</strong></div>
+            <div className="axQuestion">
+              <small>ASK · {item.askWho}</small>
+              <p>{item.questionToAsk}</p>
+              <button onClick={() => onCopyQuestion(item.questionToAsk)}>AX 질문 복사</button>
+            </div>
+          </section>
+        ))}
+      </div>
+
+      <div className="axScenario">
+        <article><span>MORE HUMAN</span><p>{audit.twelveMonthScenario.moreHuman}</p></article>
+        <article><span>MORE AI / AGENT</span><p>{audit.twelveMonthScenario.moreAI}</p></article>
+        <article><span>WATCH FOR</span><p>{audit.twelveMonthScenario.watchFor}</p></article>
+      </div>
+
+      <div className="axRule">
+        <b>AX RULE</b>
+        <p>{audit.axRule}</p>
+        <small>AI 노출도는 해고 확률이 아닙니다. 실제 task·workflow·권한·검증 체계를 확인하세요.</small>
+      </div>
+    </article>
   );
 }
 
