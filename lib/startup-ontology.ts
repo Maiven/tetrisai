@@ -1,4 +1,4 @@
-export const STARTUP_ONTOLOGY_VERSION = '2026.09.1';
+export const STARTUP_ONTOLOGY_VERSION = '2026.09.2';
 
 export type OntologyModuleId =
   | 'decision'
@@ -7,6 +7,7 @@ export type OntologyModuleId =
   | 'leadership'
   | 'compensation'
   | 'learning'
+  | 'ax'
   | 'evidence'
   | 'action';
 
@@ -18,6 +19,7 @@ export type OntologyNodeType =
   | 'Unknown'
   | 'Question'
   | 'ResponseSignal'
+  | 'AXSignal'
   | 'FlipCondition'
   | 'VerificationAction';
 
@@ -46,6 +48,7 @@ export type OntologyRelation =
   | 'VERIFIED_BY'
   | 'PUBLICLY_SUPPORTED_BY'
   | 'RESPONDED_WITH'
+  | 'TRANSFORMED_BY'
   | 'COULD_FLIP'
   | 'LEADS_TO_ACTION';
 
@@ -92,6 +95,11 @@ export const STARTUP_DECISION_ONTOLOGY = {
     description: '회사 성장과 개인 학습을 분리하고 미래 선택지의 질을 확인',
     concepts: ['skill evidence', 'portfolio outcome', 'mentor/peer quality', 'alternative quality'],
   },
+  ax: {
+    label: 'AI Transformation / AX',
+    description: 'AI 도구 보유 여부가 아니라 업무 재설계, human-agent handoff, 사람의 판단권, 조직 준비도, 품질·책임, 역량 궤적을 확인',
+    concepts: ['work redesign', 'augmentation vs automation', 'human agency', 'agent handoff', 'AI governance', 'quality standard', 'skill trajectory'],
+  },
   evidence: {
     label: 'Evidence',
     description: '문장을 사실, 가정, 미확인으로 구분하고 출처와 검증 행동을 연결',
@@ -127,8 +135,9 @@ export function getOntologyPrompt(context: PromptContext): string {
   if (/보상|스톡옵션/.test(t)) priorities.push('compensation');
   if (/역할|승진|조직개편|리더/.test(t)) priorities.push('role', 'leadership');
   if (/합류|이직|잔류/.test(t)) priorities.push('company', 'role', 'leadership', 'learning', 'compensation');
+  if (/AI|AX|자동화|에이전트|agent/i.test(t)) priorities.push('ax', 'role', 'leadership', 'learning');
 
-  const unique = [...new Set([...priorities, 'company', 'role', 'leadership', 'compensation', 'learning'] as OntologyModuleId[])];
+  const unique = [...new Set([...priorities, 'company', 'role', 'leadership', 'compensation', 'learning', 'ax'] as OntologyModuleId[])];
 
   return unique
     .map((id) => {
@@ -150,6 +159,19 @@ type GraphAnalysis = {
   }[];
   flipConditions: string[];
   verificationSprint: { horizon: string; action: string; evidence: string }[];
+  axAudit?: {
+    exposureMode: string;
+    exposureNote: string;
+    items: {
+      area: string;
+      status: string;
+      signal: string;
+      missingEvidence: string;
+      questionToAsk: string;
+    }[];
+    twelveMonthScenario: { moreHuman: string; moreAI: string; watchFor: string };
+    axRule: string;
+  };
 };
 
 function nodeId(prefix: string, index: number) {
@@ -277,6 +299,26 @@ export function buildDecisionGraph(
     } else {
       edges.push({ source: 'decision_1', relation: 'HAS_CLAIM', target: id });
     }
+  });
+
+  analysis.axAudit?.items.slice(0, 5).forEach((item, index) => {
+    const id = nodeId('ax_signal', index);
+    const targetDimension =
+      item.area === '업무 재설계' ? 1 :
+      item.area === '조직 준비도' ? 0 :
+      item.area === '인간 판단·권한' ? 2 :
+      item.area === '역량 궤적' ? 4 :
+      2;
+
+    nodes.push({
+      id,
+      type: 'AXSignal',
+      label: `${item.area}: ${item.signal}`,
+      status: item.status === '확인됨' ? 'verified' : 'needs_verification',
+      provenance: 'model_structured',
+      dimension: 'ax',
+    });
+    edges.push({ source: nodeId('dimension', targetDimension), relation: 'TRANSFORMED_BY', target: id });
   });
 
   analysis.flipConditions.slice(0, 4).forEach((label, index) => {
